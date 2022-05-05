@@ -12,8 +12,13 @@ def SPM(points):
             y_min = y
         if y > y_max:
             y_max = y
-    root = curr_intervals.insert_node(root, (y_min,0))
+    root = curr_intervals.insert_node(root, (0,0)) #y_min doesn't matter because we have 0 as a lower bound
     for i in range(1, len(points)):
+        left = root
+        while left.leftneighbor:
+            left = left.leftneighbor
+        while left:
+            left = left.rightneighbor
         below_proj = None
         start = None
         curr = root
@@ -48,22 +53,25 @@ def SPM(points):
         while curr_down:
             j = curr_down.key[1]
             P = (points[i][0], curr_down.key[0])
-            print(points[i],points[j],P)
-            #TODOOOO GONNA SLEEP
             if d(points[i], P) <= d(points[j], P):
                 last_down = curr_down
                 curr_down = curr_down.left
             else:
                 curr_down = curr_down.right
         j = last_up.key[1]
-        up = (points[j][1]+points[i][1]+points[i][0]-points[j][0])/2
-        j = last_down.key[1]
-        if last_down.key[0] == y_min:
-            down = (points[i][1]+points[j][1]-points[i][0]+points[j][0])/2
+        if points[j][1] >= points[i][1] and (points[i][0]-points[j][0]) <= (points[j][1]-points[i][1]):
+            up = (points[j][1]+points[i][1]+points[i][0]-points[j][0])/2
         else:
-            last_down = y_min
+            up = None
+        if last_down.key[0] != 0:
+            j = last_down.leftneighbor.key[1]
+            down = max(0,(points[i][1]+points[j][1]-points[i][0]+points[j][0])/2)
+        else:
+            down = 0
+        if down == 0:
+            replaced = curr_intervals.getMinValueNode(root).key
+            root = curr_intervals.delete_node(root, replaced)
         root = curr_intervals.insert_node(root, (down,i))
-    #todo gotta remove things within the region
         curr = root
         while curr.key != (down, i):
             if curr.key < (down, i):
@@ -71,16 +79,33 @@ def SPM(points):
             else:
                 curr = curr.left
         curr_above = curr.rightneighbor
-
-        while curr_above and curr_above.key[0] < up:
-            temp = curr_above.rightneighbor
-            if not temp or temp.key[0] > up:
-                root = curr_intervals.delete_node(root, curr_above.key)
-                root = curr_intervals.insert_node(root, (up, curr_above.key[1]))
+        if up is not None:
+            if not curr_above:
+                root = curr_intervals.insert_node(root, (up, replaced[1]))
+            elif curr_above.key[0] > up:
+                if curr.leftneighbor:
+                    root = curr_intervals.insert_node(root, (up, curr.leftneighbor.key[1]))
+                else:
+                    root = curr_intervals.insert_node(root, (up, replaced[1]))
             else:
+                while curr_above:
+                    temp = curr_above.rightneighbor
+                    if not temp or temp.key[0] > up:
+                        root = curr_intervals.delete_node(root, curr_above.key)
+                        if up is not None:
+                            root = curr_intervals.insert_node(root, (up, curr_above.key[1]))
+                        break
+                    else:
+                        root = curr_intervals.delete_node(root, curr_above.key)
+                    curr_above = temp
+        else:
+            while curr_above:
+                temp = curr_above.rightneighbor
                 root = curr_intervals.delete_node(root, curr_above.key)
-            curr_above = temp
+                curr_above = temp
+    left = root
+    while left.leftneighbor:
+        left = left.leftneighbor
+    while left:
+        left = left.rightneighbor
     return root, curr_intervals
-
-root, curr_intervals = SPM([(0,0), (1,2), (2,5), (3,10), (4,-10)])
-curr_intervals.printHelper(root, "", True)
