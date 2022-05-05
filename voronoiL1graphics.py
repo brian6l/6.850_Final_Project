@@ -22,12 +22,14 @@ def SPM(points):
     root = curr_intervals.insert_node(root, (0,0)) #y_min doesn't matter because we have 0 as a lower bound
     pygame.draw.line(screen, (0,0,0), (points[0][0], 0), (points[0][0], HEIGHT))
     for i in range(1, len(points)):
+        print("Looking at point",points[i])
         left = root
         while left.leftneighbor:
             left = left.leftneighbor
         while left:
             pygame.draw.line(screen, (0,0,0), (points[i-1][0], left.key[0]), (points[i][0], left.key[0]))
             left = left.rightneighbor
+        #START HERE
         below_proj = None
         start = None
         curr = root
@@ -50,7 +52,19 @@ def SPM(points):
             root = curr_intervals.insert_node(root, (down, i))
             pygame.draw.line(screen, (0,0,0), (points[i][0], down), (points[i][0],HEIGHT))
             continue
-        print(start.key)
+        temp = start.parent()
+        print("temp start:",start.key)
+        curr_intervals.printHelper(root,"",True)
+        while temp:
+            P = (points[i][0], temp.key[0])
+            if d(points[i], P) <= d(points[temp.key[1]], P):
+                start = temp
+                print("using parent:",start.key)
+                temp = temp.parent()
+            else:
+                break
+        print("start:",start.key)
+        #THE PROBLEM IS HERE. THE INTERVAL DOESN'T NECESSARILY LIE IN A SINGLE BIG SUBTREE
         curr_up, curr_down = start, start
         last_up, last_down = None, None
         while curr_up:
@@ -69,6 +83,7 @@ def SPM(points):
                 curr_down = curr_down.left
             else:
                 curr_down = curr_down.right
+        #END HERE
         j = last_up.key[1]
         if points[j][1] >= points[i][1] and (points[i][0]-points[j][0]) <= (points[j][1]-points[i][1]):
             up = (points[j][1]+points[i][1]+points[i][0]-points[j][0])/2
@@ -109,9 +124,11 @@ def SPM(points):
                     temp = curr_above.rightneighbor
                     print("deleting",curr_above.key)
                     if not temp or temp.key[0] > up:
+                        deleted_key = curr_above.key
                         root = curr_intervals.delete_node(root, curr_above.key)
                         if up is not None:
-                            root = curr_intervals.insert_node(root, (up, curr_above.key[1]))
+                            print("inserted",(up, deleted_key[1]))
+                            root = curr_intervals.insert_node(root, (up, deleted_key[1]))
                         break
                     else:
                         root = curr_intervals.delete_node(root, curr_above.key)

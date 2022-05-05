@@ -9,10 +9,16 @@ class TreeNode(object):
         self.key = key
         self.left = None
         self.right = None
-        self.parent = None
         self.leftneighbor = None
         self.rightneighbor = None
         self.height = 1
+    def parent(self):
+        if self.leftneighbor and self.leftneighbor.right is self:
+            return self.leftneighbor
+        elif self.rightneighbor and self.rightneighbor.left is self:
+            return self.rightneighbor
+        else:
+            return None
 from math import inf
 class LAVLTree(object):
     def __init__(self): 
@@ -39,7 +45,6 @@ class LAVLTree(object):
                 if root.leftneighbor:
                     root.leftneighbor.rightneighbor = left
                 root.leftneighbor = left
-            left.parent = root
             root.left = left
         else:
             right = self.insert_node(root.right, key)
@@ -48,7 +53,6 @@ class LAVLTree(object):
                 if root.rightneighbor:
                     root.rightneighbor.leftneighbor = right
                 root.rightneighbor = right
-            right.parent = root
             root.right = right
 
         root.height = 1 + max(self.getHeight(root.left),
@@ -80,14 +84,9 @@ class LAVLTree(object):
             return root
         elif key < root.key:
             root.left = self.delete_node(root.left, key)
-            if root.left:
-                root.left.parent = root
         elif key > root.key:
             root.right = self.delete_node(root.right, key)
-            if root.right:
-                root.right.parent = root
         else:
-            print("found node",root.key)
             if root.left is None:
                 temp = root.right
             elif root.right is None:
@@ -103,12 +102,8 @@ class LAVLTree(object):
                         root.rightneighbor.leftneighbor = None
                 elif root.leftneighbor:
                     root.leftneighbor.rightneighbor = None
-                if temp:
-                    temp.parent = None
                 return temp
             root.key = temp.key
-            print("updating neighbors of",root.key)
-            print(root.rightneighbor.key)
             if root.rightneighbor:
                 root.rightneighbor = root.rightneighbor.rightneighbor
             root.right = self.delete_node(root.right,
