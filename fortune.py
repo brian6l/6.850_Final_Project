@@ -32,12 +32,19 @@ class TreeNode(object):
             focusr = self.rneighbor.point
             parabolarcoeffs = [1/(2*(focusr.y-self.directrix)), -1/((focusr.y-self.directrix))*focusr.x, 1/(2*(focusr.y-self.directrix))*focusr.x**2+(focusr.y+self.directrix)/2]
             a, b, c = tuple(parabola1coeffs[i]-parabolarcoeffs[i] for i in range(3))
+            # print(a, b, c)
+            # print(parabola1coeffs)
+            # print(parabolarcoeffs)
+            # print(self.leftx, self.rightx, self.rneighbor.leftx, self.rneighbor.rightx)
+            # print(self)
             if(a==0): 
                 rightx = -c/b
             else: 
                 u = (-b+sqrt(b*b-4*a*c))/(2*a)
                 v = (-b-sqrt(b*b-4*a*c))/(2*a)
-                if(self.leftx<=u<=self.rightx and self.rneighbor.leftx<=u<=self.rneighbor.rightx): 
+                return v
+                if(False): 
+                # if(self.leftx<=u<=self.rightx and self.rneighbor.leftx<=u<=self.rneighbor.rightx): 
                     rightx = u
                 else: 
                     rightx = v
@@ -54,16 +61,20 @@ class TreeNode(object):
             a, b, c = tuple(parabola1coeffs[i]-parabolalcoeffs[i] for i in range(3))
             # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix)
             if(a==0): 
+                # print(a, b, c)
                 leftx = -c/b
             else: 
                 u = (-b+sqrt(b*b-4*a*c))/(2*a)
                 v = (-b-sqrt(b*b-4*a*c))/(2*a)
-                if(self.leftx<=u<=self.rightx and self.lneighbor.leftx<=u<=self.lneighbor.rightx): 
+                return u
+                if(True): 
+                # if(self.leftx<=u<=self.rightx and self.lneighbor.leftx<=u<=self.lneighbor.rightx): 
                     leftx = u
                 else: 
                     leftx = v
         else: 
             leftx = -inf
+        # print(self, leftx)
         return leftx
     def __lt__(self, point): 
         # returns self<point, ie point going straight up is to the right of parabola
@@ -81,6 +92,7 @@ class TreeNode(object):
             return False
         leftx = self.computeleftx()
         rightx = self.computerightx()
+        # print(leftx, rightx, point.x)
         return leftx>point.x or (leftx>=point.x-0.00001 and rightx>point.x)
 class Event(object): 
     def __init__(self, node, point, directrix, isinsertion): 
@@ -214,7 +226,7 @@ class Beachline(object):
     
     # Function to delete a node
     def delete_node(self, root, event):
-        # print(root, event)
+        # print(root, event, 'delete')
         root.directrix = event.directrix
         # Find the node to be deleted and remove it
         if not root:
@@ -251,9 +263,11 @@ class Beachline(object):
             root.rightx = temp.rightx
             root.right = self.delete_left_node(root.right)
         elif root>event.point:
+            # print('g')
             # print(root, event.point, 'g')
             root.left = self.delete_node(root.left, event)
         elif root<event.point:
+            # print('l')
             # print(root, event.point, 'l')
             root.right = self.delete_node(root.right, event)
         else:
@@ -450,14 +464,14 @@ def f(points):
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
                             heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
-        print([i.__str__() for i in events])
+        # print()
+        # print([i.__str__() for i in events])
         leftmost = beachlineroot
         while(leftmost.left is not None): 
             leftmost = leftmost.left
         # print(leftmost)
-        while(leftmost): 
-            print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
-            leftmost = leftmost.rneighbor
-        print()
+        # while(leftmost): 
+        #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
+        #     leftmost = leftmost.rneighbor
     return graph
-print(f([Point(0, 0), Point(2, 3), Point(-6, 5), Point(1, 8), Point(0, -10)]))
+print(f([Point(0, 0), Point(2, 3), Point(-3, 5), Point(0, -4), Point(1, 8)]))
