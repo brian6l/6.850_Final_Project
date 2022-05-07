@@ -35,7 +35,7 @@ class TreeNode(object):
             # print(a, b, c)
             # print(parabola1coeffs)
             # print(parabolarcoeffs)
-            print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs, parabolarcoeffs)
+            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs, parabolarcoeffs)
             # print(self)
             if(a==0): 
                 rightx = -c/b
@@ -225,7 +225,7 @@ class Beachline(object):
     
     # Function to delete a node
     def delete_node(self, root, event):
-        print(root, event, 'delete')
+        # print(root, event, 'delete')
         root.directrix = event.directrix
         # Find the node to be deleted and remove it
         if not root:
@@ -342,7 +342,7 @@ class Beachline(object):
 
     # Get balance factor of the node
     def getBalance(self, root):
-        return 0
+        # return 0
         if not root:
             return 0
         return self.getHeight(root.left) - self.getHeight(root.right)
@@ -388,8 +388,8 @@ def f(points):
                 leftmost = leftmost.left
             # print(leftmost)
             # while(leftmost): 
-            #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
-            #     leftmost = leftmost.rneighbor
+                # print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
+                # leftmost = leftmost.rneighbor
             # print()
             # print(nextevent.node, beachlineroot)
             node = beachline.find_node(beachlineroot, nextevent.node)
@@ -455,24 +455,24 @@ def f(points):
                         circumx = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
                         circumy = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                         arcy = circumy+circumradius(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
-                        print(node)
-                        print(node.lneighbor)
-                        print(node.rneighbor)
-                        print(node.rneighbor.rneighbor)
-                        print(arcy)
+                        # print(node)
+                        # print(node.lneighbor)
+                        # print(node.rneighbor)
+                        # print(node.rneighbor.rneighbor)
+                        # print(arcy)
                         # check this condition vvv
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
                             heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
-        print()
-        print([i.__str__() for i in events])
-        leftmost = beachlineroot
-        while(leftmost.left is not None): 
-            leftmost = leftmost.left
-        # print(leftmost)
-        while(leftmost): 
-            print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
-            leftmost = leftmost.rneighbor
+        # print()
+        # print([i.__str__() for i in events])
+        # leftmost = beachlineroot
+        # while(leftmost.left is not None): 
+        #     leftmost = leftmost.left
+        # # print(leftmost)
+        # while(leftmost): 
+        #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
+        #     leftmost = leftmost.rneighbor
     return graph
 # print(f([Point(0, 0), Point(2, 3), Point(-3, 5), Point(0, -4), Point(1, 8)]))
 print(f([Point(501, 137), Point(735, 204), Point(355, 297), Point(573, 301), Point(419, 360)]))
