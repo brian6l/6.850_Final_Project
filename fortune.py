@@ -21,7 +21,7 @@ class TreeNode(object):
         self.rightx = inf
         self.directrix = -inf
     def __str__(self): 
-        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'+str(self.directrix)
+        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'#+str(self.directrix)
     def __eq__(self, node): 
         return self.point==node.point and self.leftx==node.leftx and self.rightx==node.rightx
     def computerightx(self): 
@@ -35,7 +35,7 @@ class TreeNode(object):
             # print(a, b, c)
             # print(parabola1coeffs)
             # print(parabolarcoeffs)
-            # print(self.leftx, self.rightx, self.rneighbor.leftx, self.rneighbor.rightx)
+            print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs, parabolarcoeffs)
             # print(self)
             if(a==0): 
                 rightx = -c/b
@@ -59,7 +59,7 @@ class TreeNode(object):
             focusl = self.lneighbor.point
             parabolalcoeffs = [1/(2*(focusl.y-self.directrix)), -1/((focusl.y-self.directrix))*focusl.x, 1/(2*(focusl.y-self.directrix))*focusl.x**2+(focusl.y+self.directrix)/2]
             a, b, c = tuple(parabola1coeffs[i]-parabolalcoeffs[i] for i in range(3))
-            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix)
+            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs)
             if(a==0): 
                 # print(a, b, c)
                 leftx = -c/b
@@ -112,12 +112,11 @@ class Beachline(object):
     def __init__(self): 
         self.y = -inf
     def find_node(self, root, node): 
+        if not root:
+            return False
         root.directrix = node.directrix
         # print(self, root, node)
-        # Find the node to be deleted and remove it
-        if not root:
-            return root
-        elif(node==root): 
+        if(node==root): 
             return root
         elif(root.lneighbor and node==root.lneighbor): 
             return root.lneighbor
@@ -160,7 +159,7 @@ class Beachline(object):
     def insert_left_node(self, root, node): 
         if(not root): 
             return node
-        root.left = self.insert_right_node(root.left, node)
+        root.left = self.insert_left_node(root.left, node)
         root.height = 1 + max(self.getHeight(root.left),
                               self.getHeight(root.right))
 
@@ -226,7 +225,7 @@ class Beachline(object):
     
     # Function to delete a node
     def delete_node(self, root, event):
-        # print(root, event, 'delete')
+        print(root, event, 'delete')
         root.directrix = event.directrix
         # Find the node to be deleted and remove it
         if not root:
@@ -271,6 +270,7 @@ class Beachline(object):
             # print(root, event.point, 'l')
             root.right = self.delete_node(root.right, event)
         else:
+            return root
             if root.lneighbor: 
                 root.lneighbor.rneighbor = root.rneighbor
             if root.rneighbor: 
@@ -295,7 +295,6 @@ class Beachline(object):
         # Update the balance factor of nodes
         root.height = 1 + max(self.getHeight(root.left),
                               self.getHeight(root.right))
-
         balanceFactor = self.getBalance(root)
 
         # Balance the tree
@@ -312,11 +311,6 @@ class Beachline(object):
                 root.right = self.rightRotate(root.right)
                 return self.leftRotate(root)
         return root
-    def getMinValueNode(self, root):
-        if root is None or root.left is None:
-            return root
-        return self.getMinValueNode(root.left)
-
     def leftRotate(self, z):
         y = z.right
         T2 = y.left
@@ -402,7 +396,7 @@ def f(points):
             # print(node.lneighbor)
             if(node.lneighbor and node.lneighbor.lneighbor): 
                 # print('asdfgh')
-                if(area(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)<0): 
+                # if(area(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)<0): 
                     circumx = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).x
                     circumy = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
@@ -413,7 +407,7 @@ def f(points):
                 # print(node)
                 # print(node.rneighbor)
                 # print(node.rneighbor.rneighbor)
-                if(area(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)>0): 
+                # if(area(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)>0): 
                     circumx = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
                     circumy = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
@@ -426,52 +420,59 @@ def f(points):
             # print(nextevent.node)
             nextevent.node.directrix = nextevent.directrix
             node = beachline.find_node(beachlineroot, nextevent.node)
-            # print('success', nextevent.directrix)
-            # print(nextevent)
-            # print(nextevent.node.lneighbor)
-            # print(nextevent.node.rneighbor)
-            point1 = nextevent.node.point.x, nextevent.node.point.y
-            point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
-            point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
-            edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
-            edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
-            edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
-            if(edge12 in graph): 
-                graph[edge12].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge12] = [(nextevent.point.x, nextevent.point.y)]
-            if(edge23 in graph): 
-                graph[edge23].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge23] = [(nextevent.point.x, nextevent.point.y)]
-            if(edge31 in graph): 
-                graph[edge31].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge31] = [(nextevent.point.x, nextevent.point.y)]
             if(node): 
+                # print('success', nextevent.directrix)
+                # print(nextevent)
+                # print(nextevent.node.lneighbor)
+                # print(nextevent.node.rneighbor)
+                point1 = nextevent.node.point.x, nextevent.node.point.y
+                point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
+                point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
+                edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
+                edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
+                edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
+                if(edge12 in graph): 
+                    graph[edge12].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge12] = [(nextevent.point.x, nextevent.point.y)]
+                if(edge23 in graph): 
+                    graph[edge23].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge23] = [(nextevent.point.x, nextevent.point.y)]
+                if(edge31 in graph): 
+                    graph[edge31].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge31] = [(nextevent.point.x, nextevent.point.y)]
                 if(node.lneighbor and node.rneighbor and node.lneighbor.lneighbor): 
-                    if(area(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)>0): 
+                    # if(area(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)>0): 
                         circumx = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).x
                         circumy = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                         arcy = circumy+circumradius(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                         if(atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
                             heappush(events, Event(node.lneighbor, Point(circumx, circumy), arcy, False))
                 if(node.lneighbor and node.rneighbor and node.rneighbor.rneighbor): 
-                    if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
+                    # if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
                         circumx = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
                         circumy = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                         arcy = circumy+circumradius(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
+                        print(node)
+                        print(node.lneighbor)
+                        print(node.rneighbor)
+                        print(node.rneighbor.rneighbor)
+                        print(arcy)
+                        # check this condition vvv
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
                             heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
-        # print()
-        # print([i.__str__() for i in events])
+        print()
+        print([i.__str__() for i in events])
         leftmost = beachlineroot
         while(leftmost.left is not None): 
             leftmost = leftmost.left
         # print(leftmost)
-        # while(leftmost): 
-        #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
-        #     leftmost = leftmost.rneighbor
+        while(leftmost): 
+            print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
+            leftmost = leftmost.rneighbor
     return graph
-print(f([Point(0, 0), Point(2, 3), Point(-3, 5), Point(0, -4), Point(1, 8)]))
+# print(f([Point(0, 0), Point(2, 3), Point(-3, 5), Point(0, -4), Point(1, 8)]))
+print(f([Point(501, 137), Point(735, 204), Point(355, 297), Point(573, 301), Point(419, 360)]))
