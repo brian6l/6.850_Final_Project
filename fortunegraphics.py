@@ -1,6 +1,7 @@
-from math import inf, sqrt, atan, atan2
+from math import inf, sqrt, atan, atan2, floor
 from heapq import heappush, heappop
 import pygame
+import time
 
 pygame.init()
 HEIGHT = 600
@@ -17,6 +18,18 @@ class Point(object):
     def __str__(self): 
         return str(self.x)+','+str(self.y)
 class TreeNode(object):
+    def copy(self): 
+        tempnode = self
+        tempnodecopy = TreeNode(tempnode.point)
+        tempnodecopy.left = tempnode.left
+        tempnodecopy.right = tempnode.right
+        tempnodecopy.leftx = tempnode.leftx
+        tempnodecopy.rightx = tempnodecopy.rightx
+        tempnodecopy.directrix = tempnode.directrix
+        tempnodecopy.lneighbor = tempnode.lneighbor
+        tempnodecopy.rneighbor = tempnode.rneighbor
+        tempnodecopy.height = tempnode.height
+        return tempnodecopy
     def __init__(self, point):
         self.point = point
         self.left = None
@@ -28,7 +41,7 @@ class TreeNode(object):
         self.rightx = inf
         self.directrix = -inf
     def __str__(self): 
-        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'+str(self.directrix)
+        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'#+str(self.directrix)
     def __eq__(self, node): 
         return self.point==node.point and self.leftx==node.leftx and self.rightx==node.rightx
     def computerightx(self): 
@@ -42,7 +55,7 @@ class TreeNode(object):
             # print(a, b, c)
             # print(parabola1coeffs)
             # print(parabolarcoeffs)
-            # print(self.leftx, self.rightx, self.rneighbor.leftx, self.rneighbor.rightx)
+            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs, parabolarcoeffs)
             # print(self)
             if(a==0): 
                 rightx = -c/b
@@ -66,7 +79,7 @@ class TreeNode(object):
             focusl = self.lneighbor.point
             parabolalcoeffs = [1/(2*(focusl.y-self.directrix)), -1/((focusl.y-self.directrix))*focusl.x, 1/(2*(focusl.y-self.directrix))*focusl.x**2+(focusl.y+self.directrix)/2]
             a, b, c = tuple(parabola1coeffs[i]-parabolalcoeffs[i] for i in range(3))
-            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix)
+            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs)
             if(a==0): 
                 # print(a, b, c)
                 leftx = -c/b
@@ -118,24 +131,44 @@ class Event(object):
 class Beachline(object): 
     def __init__(self): 
         self.y = -inf
-    def find_node(self, root, node): 
-        root.directrix = node.directrix
-        # print(self, root, node)
-        # Find the node to be deleted and remove it
+    def find_node(self, root, node, eventx=None): 
         if not root:
+            return False
+        if(eventx is None): 
+            root.directrix = node.directrix
+            # print(self, root, node)
+            if(node==root): 
+                # event.node.point==root.point and root.leftx<=event.point<=root.rightx
+                return root
+            elif(root.lneighbor and node==root.lneighbor): 
+                return root.lneighbor
+            elif(root.rneighbor and node==root.rneighbor): 
+                return root.rneighbor
+            # if root>node.point:
+            if(root.computeleftx()>node.computeleftx()): 
+                return self.find_node(root.left, node)
+            if(root.computeleftx()<node.computeleftx()): 
+            # elif root<node.point:
+                return self.find_node(root.right, node)
+            else:
+                return None
+        root.directrix = node.directrix
+        # print(root, node, eventx, 'find delete')
+        if(node.point==root.point and root.leftx<=eventx<=root.rightx): 
+            # event.node.point==root.point and root.leftx<=event.point<=root.rightx
             return root
-        elif(node==root): 
-            return root
-        elif(root.lneighbor and node==root.lneighbor): 
+        elif(root.lneighbor and node.point==root.lneighbor.point and root.lneighbor.leftx<=eventx<=root.lneighbor.rightx): 
             return root.lneighbor
-        elif(root.rneighbor and node==root.rneighbor): 
+        elif(root.rneighbor and node.point==root.rneighbor.point and root.rneighbor.leftx<=eventx<=root.rneighbor.rightx): 
             return root.rneighbor
         # if root>node.point:
-        if(root.computeleftx()>node.computeleftx()): 
-            return self.find_node(root.left, node)
-        if(root.computeleftx()<node.computeleftx()): 
+        # print(root.computeleftx(), root.computerightx())
+        if(root.computeleftx()>eventx): 
+            return self.find_node(root.left, node, eventx=eventx)
+        elif(root.computerightx()<eventx): 
+            # print('hi', root.right)
         # elif root<node.point:
-            return self.find_node(root.right, node)
+            return self.find_node(root.right, node, eventx=eventx)
         else:
             return None
     def delete_left_node(self, root): 
@@ -167,7 +200,7 @@ class Beachline(object):
     def insert_left_node(self, root, node): 
         if(not root): 
             return node
-        root.left = self.insert_right_node(root.left, node)
+        root.left = self.insert_left_node(root.left, node)
         root.height = 1 + max(self.getHeight(root.left),
                               self.getHeight(root.right))
 
@@ -238,7 +271,7 @@ class Beachline(object):
         # Find the node to be deleted and remove it
         if not root:
             return root
-        elif(event.node==root): 
+        elif(event.node.point==root.point and root.leftx<=event.point.x<=root.rightx): 
             # print('a', root, root.lneighbor, root.rneighbor, root.left, root.right)
             if root.lneighbor: 
                 root.lneighbor.rneighbor = root.rneighbor
@@ -246,10 +279,10 @@ class Beachline(object):
                 root.rneighbor.lneighbor = root.lneighbor
             if root.left is None:
                 temp = root.right
-                if(root.lneighbor and root.lneighbor.right==root): 
+                if(root.lneighbor and root.rneighbor.left and root.lneighbor.right==root): 
                     # print('hi')
                     root.lneighbor.right = None
-                if(root.rneighbor and root.rneighbor.left==root): 
+                if(root.rneighbor and root.rneighbor.left and root.rneighbor.left==root): 
                     root.rneighbor.left = None
                 # temp2 = root.lneighbor
                 # root.point = Point(7, 8)
@@ -258,9 +291,9 @@ class Beachline(object):
                 return temp
             elif root.right is None:
                 temp = root.left
-                if(root.lneighbor and root.lneighbor.right==root): 
+                if(root.lneighbor and root.lneighbor.right and root.lneighbor.right==root): 
                     root.lneighbor.right = None
-                if(root.rneighbor and root.rneighbor.left==root): 
+                if(root.rneighbor and root.rneighbor.left and root.rneighbor.left==root): 
                     root.rneighbor.left = None
                 root = None
                 return temp
@@ -278,6 +311,8 @@ class Beachline(object):
             # print(root, event.point, 'l')
             root.right = self.delete_node(root.right, event)
         else:
+            # print('hi')
+            return root
             if root.lneighbor: 
                 root.lneighbor.rneighbor = root.rneighbor
             if root.rneighbor: 
@@ -302,7 +337,6 @@ class Beachline(object):
         # Update the balance factor of nodes
         root.height = 1 + max(self.getHeight(root.left),
                               self.getHeight(root.right))
-
         balanceFactor = self.getBalance(root)
 
         # Balance the tree
@@ -319,11 +353,6 @@ class Beachline(object):
                 root.right = self.rightRotate(root.right)
                 return self.leftRotate(root)
         return root
-    def getMinValueNode(self, root):
-        if root is None or root.left is None:
-            return root
-        return self.getMinValueNode(root.left)
-
     def leftRotate(self, z):
         y = z.right
         T2 = y.left
@@ -355,7 +384,7 @@ class Beachline(object):
 
     # Get balance factor of the node
     def getBalance(self, root):
-        return 0
+        # return 0
         if not root:
             return 0
         return self.getHeight(root.left) - self.getHeight(root.right)
@@ -363,6 +392,38 @@ class Beachline(object):
         if root is None or root.left is None:
             return root
         return self.getMinValueNode(root.left)
+    def draw(self, root, precision = 100):
+        if root.directrix == -inf:
+            return
+        curr = self.getMinValueNode(root)
+        while curr:
+            curr.directrix, temp = root.directrix, curr.directrix
+            try:
+                left = curr.computeleftx()
+            except:
+                left = 0
+            try:
+                right = curr.computerightx()
+            except:
+                right = WIDTH
+            curr.directrix = temp
+            t = 2*(curr.point.y-root.directrix)
+            if t != 0:
+                a, b, c = 1/t, -2*curr.point.x/t, (curr.point.x**2+curr.point.y**2-root.directrix**2)/t
+                #print(left, right)
+                prev_p = (left, a*left*left+b*left+c)
+                for k in range(1, precision+1):
+                    x = left + (right-left)*k/precision
+                    curr_p = (x, a*x*x+b*x+c)
+                    pygame.draw.line(screen, (0,0,0), prev_p, curr_p)
+                    prev_p = curr_p
+            curr = curr.rneighbor
+
+def draw_points():
+    pygame.draw.rect(screen, (255,255,255), pygame.Rect((0,0), (WIDTH, HEIGHT)))
+    for point in positions:
+        pygame.draw.circle(screen, (0,0,0), (point.x, point.y), 2)
+
 def circumcenter(point1, point2, point3): 
     z12 = point1.x**2+point1.y**2
     z22 = point2.x**2+point2.y**2
@@ -387,99 +448,181 @@ def f(points):
         node.directrix = point.y
         heappush(events, Event(node, point, point.y, True))
     graph = {}
+    prev_directrix = 0
     while(events): 
         # print([i.__str__() for i in events])
         nextevent = heappop(events)
+        if beachlineroot:
+            root_directrix = beachlineroot.directrix
+            if root_directrix <= HEIGHT:
+                N = floor(nextevent.directrix - prev_directrix)
+                for i in range(0,N):
+                    beachlineroot.directrix = prev_directrix + (nextevent.directrix-prev_directrix)*i/N
+                    draw_points()
+                    pygame.draw.line(screen, (0,0,0), (0, beachlineroot.directrix), (WIDTH, beachlineroot.directrix))
+                    beachline.draw(beachlineroot)
+                    pygame.display.flip()
+                    time.sleep(0.01)
+                    if beachlineroot.directrix > HEIGHT:
+                        break
+                beachlineroot.directrix = root_directrix
+        else:
+            N = floor(nextevent.directrix - prev_directrix)
+            for i in range(0, N):
+                y = prev_directrix + (nextevent.directrix - prev_directrix)*i/N
+                draw_points()
+                pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y))
+                pygame.display.flip()
+                time.sleep(0.01)
         if(nextevent.isinsertion): 
             # print()
             # event is new site
             beachlineroot = beachline.insert_node(beachlineroot, nextevent.point)
             # print('a')
             # print(beachlineroot)
-            leftmost = beachlineroot
-            while(leftmost.left is not None): 
-                leftmost = leftmost.left
+            # leftmost = beachlineroot
+            # while(leftmost.left is not None): 
+            #     leftmost = leftmost.left
             # print(leftmost)
             # while(leftmost): 
-            #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
-            #     leftmost = leftmost.rneighbor
+                # print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
+                # leftmost = leftmost.rneighbor
             # print()
             # print(nextevent.node, beachlineroot)
             node = beachline.find_node(beachlineroot, nextevent.node)
             # print(node.lneighbor)
             if(node.lneighbor and node.lneighbor.lneighbor): 
                 # print('asdfgh')
-                if(area(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)<0): 
+                # if(area(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)<0): 
                     circumx = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).x
                     circumy = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                        heappush(events, Event(node.lneighbor, Point(circumx, circumy), arcy, False))
+                        tempnode = node.lneighbor.copy()
+                        if(tempnode.left is not None): 
+                            tempnode.left = tempnode.left.copy()
+                        if(tempnode.right is not None): 
+                            tempnode.right = tempnode.right.copy()
+                        if(tempnode.lneighbor is not None): 
+                            tempnode.lneighbor = tempnode.lneighbor.copy()
+                        if(tempnode.rneighbor is not None): 
+                            tempnode.rneighbor = tempnode.rneighbor.copy()
+                        tempevent = Event(tempnode, Point(circumx, circumy), arcy, False)
+                        tempevent.lneighborpoint = tempnode.lneighbor.point
+                        tempevent.rneighborpoint = tempnode.rneighbor.point
+                        heappush(events, tempevent)
             if(node.rneighbor and node.rneighbor.rneighbor): 
                 # print('asdfghr')
                 # print(node)
                 # print(node.rneighbor)
                 # print(node.rneighbor.rneighbor)
-                if(area(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)>0): 
+                # if(area(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)>0): 
                     circumx = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
                     circumy = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                        heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
+                        tempnode = node.rneighbor.copy()
+                        if(tempnode.left is not None): 
+                            tempnode.left = tempnode.left.copy()
+                        if(tempnode.right is not None): 
+                            tempnode.right = tempnode.right.copy()
+                        if(tempnode.lneighbor is not None): 
+                            tempnode.lneighbor = tempnode.lneighbor.copy()
+                        if(tempnode.rneighbor is not None): 
+                            tempnode.rneighbor = tempnode.rneighbor.copy()
+                        tempevent = Event(tempnode, Point(circumx, circumy), arcy, False)
+                        tempevent.lneighborpoint = tempnode.lneighbor.point
+                        tempevent.rneighborpoint = tempnode.rneighbor.point
+                        heappush(events, tempevent)
             # heappush(events, events)
         else: 
             # event is popping smth
             # print(nextevent)
             # print(nextevent.node)
             nextevent.node.directrix = nextevent.directrix
-            node = beachline.find_node(beachlineroot, nextevent.node)
-            # print('success', nextevent.directrix)
-            # print(nextevent)
-            # print(nextevent.node.lneighbor)
-            # print(nextevent.node.rneighbor)
-            point1 = nextevent.node.point.x, nextevent.node.point.y
-            point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
-            point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
-            edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
-            edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
-            edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
-            if(edge12 in graph): 
-                graph[edge12].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge12] = [(nextevent.point.x, nextevent.point.y)]
-            if(edge23 in graph): 
-                graph[edge23].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge23] = [(nextevent.point.x, nextevent.point.y)]
-            if(edge31 in graph): 
-                graph[edge31].append((nextevent.point.x, nextevent.point.y))
-            else: 
-                graph[edge31] = [(nextevent.point.x, nextevent.point.y)]
+            node = beachline.find_node(beachlineroot, nextevent.node, eventx=nextevent.point.x)
+            # print(nextevent.node, node)
             if(node): 
+                point1 = nextevent.node.point.x, nextevent.node.point.y
+                point2 = nextevent.lneighborpoint.x, nextevent.lneighborpoint.y
+                point3 = nextevent.rneighborpoint.x, nextevent.rneighborpoint.y
+                # print('AAAAAA', point1, point2, point3, nextevent.point, nextevent.node)
+                edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
+                edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
+                edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
+                if(edge12 in graph): 
+                    graph[edge12].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge12] = [(nextevent.point.x, nextevent.point.y)]
+                if(edge23 in graph): 
+                    graph[edge23].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge23] = [(nextevent.point.x, nextevent.point.y)]
+                if(edge31 in graph): 
+                    graph[edge31].append((nextevent.point.x, nextevent.point.y))
+                else: 
+                    graph[edge31] = [(nextevent.point.x, nextevent.point.y)]
+                # print(node, set(graph))
+            if(node): 
+                # print('success', nextevent.directrix)
+                # print(nextevent)
+                # print(nextevent.node.lneighbor)
+                # print(nextevent.node.rneighbor)
                 if(node.lneighbor and node.rneighbor and node.lneighbor.lneighbor): 
-                    if(area(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)>0): 
+                    # if(area(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)>0): 
                         circumx = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).x
                         circumy = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                         arcy = circumy+circumradius(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                         if(atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                            heappush(events, Event(node.lneighbor, Point(circumx, circumy), arcy, False))
+                            tempnode = node.lneighbor.copy()
+                            if(tempnode.left is not None): 
+                                tempnode.left = tempnode.left.copy()
+                            if(tempnode.right is not None): 
+                                tempnode.right = tempnode.right.copy()
+                            if(tempnode.lneighbor is not None): 
+                                tempnode.lneighbor = tempnode.lneighbor.copy()
+                            if(tempnode.rneighbor is not None): 
+                                tempnode.rneighbor = tempnode.rneighbor.copy()
+                            tempevent = Event(tempnode, Point(circumx, circumy), arcy, False)
+                            tempevent.lneighborpoint = tempnode.lneighbor.point
+                            tempevent.rneighborpoint = tempnode.rneighbor.rneighbor.point
+                            heappush(events, tempevent)
                 if(node.lneighbor and node.rneighbor and node.rneighbor.rneighbor): 
-                    if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
+                    # if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
                         circumx = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
                         circumy = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                         arcy = circumy+circumradius(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
+                        # print(node)
+                        # print(node.lneighbor)
+                        # print(node.rneighbor)
+                        # print(node.rneighbor.rneighbor)
+                        # print(arcy)
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                            heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
+                            tempnode = node.rneighbor.copy()
+                            if(tempnode.left is not None): 
+                                tempnode.left = tempnode.left.copy()
+                            if(tempnode.right is not None): 
+                                tempnode.right = tempnode.right.copy()
+                            if(tempnode.lneighbor is not None): 
+                                tempnode.lneighbor = tempnode.lneighbor.copy()
+                            if(tempnode.rneighbor is not None): 
+                                tempnode.rneighbor = tempnode.rneighbor.copy()
+                            tempevent = Event(tempnode, Point(circumx, circumy), arcy, False)
+                            tempevent.lneighborpoint = tempnode.lneighbor.lneighbor.point
+                            tempevent.rneighborpoint = tempnode.rneighbor.point
+                            heappush(events, tempevent)
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
+        prev_directrix = nextevent.directrix
         # print()
         # print([i.__str__() for i in events])
-        leftmost = beachlineroot
-        while(leftmost.left is not None): 
-            leftmost = leftmost.left
-        # print(leftmost)
+        # leftmost = beachlineroot
+        # while(leftmost.left is not None): 
+        #     leftmost = leftmost.left
+        # # print(leftmost)
         # while(leftmost): 
         #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
         #     leftmost = leftmost.rneighbor
+        # print()
     return graph
 
 positions = []
@@ -498,8 +641,8 @@ def game(screen, running, calc_flag):
             calc_flag = True
             s = ""
             for point in positions:
-                s += "("+str(point.x)+", "+str(point.y)+") "
-            print(s)
+                s += "Point("+str(point.x)+", "+str(point.y)+"),"
+            print(s[:-1])
             ans = f(positions)
             for pos1, pos2 in ans:
                 pygame.draw.line(screen, (0,0,0), pos1, pos2)
