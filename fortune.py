@@ -435,7 +435,16 @@ def f(points):
                     circumy = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                        heappush(events, Event(node.lneighbor.copy(), Point(circumx, circumy), arcy, False))
+                        tempnode = node.lneighbor.copy()
+                        if(tempnode.left is not None): 
+                            tempnode.left = tempnode.left.copy()
+                        if(tempnode.right is not None): 
+                            tempnode.right = tempnode.right.copy()
+                        if(tempnode.lneighbor is not None): 
+                            tempnode.lneighbor = tempnode.lneighbor.copy()
+                        if(tempnode.rneighbor is not None): 
+                            tempnode.rneighbor = tempnode.rneighbor.copy()
+                        heappush(events, Event(tempnode, Point(circumx, circumy), arcy, False))
             if(node.rneighbor and node.rneighbor.rneighbor): 
                 # print('asdfghr')
                 # print(node)
@@ -446,7 +455,16 @@ def f(points):
                     circumy = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                        heappush(events, Event(node.rneighbor.copy(), Point(circumx, circumy), arcy, False))
+                        tempnode = node.rneighbor.copy()
+                        if(tempnode.left is not None): 
+                            tempnode.left = tempnode.left.copy()
+                        if(tempnode.right is not None): 
+                            tempnode.right = tempnode.right.copy()
+                        if(tempnode.lneighbor is not None): 
+                            tempnode.lneighbor = tempnode.lneighbor.copy()
+                        if(tempnode.rneighbor is not None): 
+                            tempnode.rneighbor = tempnode.rneighbor.copy()
+                        heappush(events, Event(tempnode, Point(circumx, circumy), arcy, False))
             # heappush(events, events)
         else: 
             # event is popping smth
@@ -459,7 +477,7 @@ def f(points):
                 point1 = nextevent.node.point.x, nextevent.node.point.y
                 point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
                 point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
-                # print(point1, point2, point3, nextevent.point)
+                # print('AAAAAA', point1, point2, point3, nextevent.point)
                 edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
                 edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
                 edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
@@ -487,7 +505,16 @@ def f(points):
                         circumy = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                         arcy = circumy+circumradius(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                         if(atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                            heappush(events, Event(node.lneighbor.copy(), Point(circumx, circumy), arcy, False))
+                            tempnode = node.lneighbor.copy()
+                            if(tempnode.left is not None): 
+                                tempnode.left = tempnode.left.copy()
+                            if(tempnode.right is not None): 
+                                tempnode.right = tempnode.right.copy()
+                            if(tempnode.lneighbor is not None): 
+                                tempnode.lneighbor = tempnode.lneighbor.copy()
+                            if(tempnode.rneighbor is not None): 
+                                tempnode.rneighbor = tempnode.rneighbor.copy()
+                            heappush(events, Event(tempnode, Point(circumx, circumy), arcy, False))
                 if(node.lneighbor and node.rneighbor and node.rneighbor.rneighbor): 
                     # if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
                         circumx = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
@@ -499,7 +526,16 @@ def f(points):
                         # print(node.rneighbor.rneighbor)
                         # print(arcy)
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                            heappush(events, Event(node.rneighbor.copy(), Point(circumx, circumy), arcy, False))
+                            tempnode = node.rneighbor.copy()
+                            if(tempnode.left is not None): 
+                                tempnode.left = tempnode.left.copy()
+                            if(tempnode.right is not None): 
+                                tempnode.right = tempnode.right.copy()
+                            if(tempnode.lneighbor is not None): 
+                                tempnode.lneighbor = tempnode.lneighbor.copy()
+                            if(tempnode.rneighbor is not None): 
+                                tempnode.rneighbor = tempnode.rneighbor.copy()
+                            heappush(events, Event(tempnode, Point(circumx, circumy), arcy, False))
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
         # print()
         # print([i.__str__() for i in events])
@@ -518,7 +554,7 @@ def f(points):
 # print(set(f([Point(383, 79), Point(152, 283), Point(463, 232), Point(311, 432)])))
 # ans = f([Point(286, 227), Point(556, 127), Point(688, 289), Point(289, 469)])
 # ans = f([Point(564, 131), Point(255, 296), Point(717, 295), Point(533, 388)])
-# ans = f([Point(1, 1), Point(-1, -1), Point(10, -10), Point(-10, 10)])
-ans = f([Point(229, 383), Point(585, 148), Point(608, 365), Point(313, 187)])
+ans = f([Point(1, 1), Point(-1, -1), Point(10, -10), Point(-10, 10), Point(0, 2), Point(0, -2)])
+# ans = f([Point(229, 383), Point(585, 148), Point(608, 365), Point(313, 187)])
 for i in ans: 
     print(i, ans[i])
