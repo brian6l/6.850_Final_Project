@@ -123,16 +123,33 @@ class Event(object):
 class Beachline(object): 
     def __init__(self): 
         self.y = -inf
-    def find_node(self, root, node): 
+    def find_node(self, root, node, eventx=None): 
         if not root:
             return False
-        root.directrix = node.directrix
-        # print(self, root, node)
-        if(node==root): 
+        if(eventx is None): 
+            root.directrix = node.directrix
+            # print(self, root, node)
+            if(node==root): 
+                # event.node.point==root.point and root.leftx<=event.point<=root.rightx
+                return root
+            elif(root.lneighbor and node==root.lneighbor): 
+                return root.lneighbor
+            elif(root.rneighbor and node==root.rneighbor): 
+                return root.rneighbor
+            # if root>node.point:
+            if(root.computeleftx()>node.computeleftx()): 
+                return self.find_node(root.left, node)
+            if(root.computeleftx()<node.computeleftx()): 
+            # elif root<node.point:
+                return self.find_node(root.right, node)
+            else:
+                return None
+        if(node.point==root.point and root.leftx<=eventx<=root.rightx): 
+            # event.node.point==root.point and root.leftx<=event.point<=root.rightx
             return root
-        elif(root.lneighbor and node==root.lneighbor): 
+        elif(root.lneighbor and node.point==root.lneighbor.point and root.lneighbor.leftx<=eventx<=root.lneighbor.rightx): 
             return root.lneighbor
-        elif(root.rneighbor and node==root.rneighbor): 
+        elif(root.rneighbor and node.point==root.rneighbor.point and root.rneighbor.leftx<=eventx<=root.rneighbor.rightx): 
             return root.rneighbor
         # if root>node.point:
         if(root.computeleftx()>node.computeleftx()): 
@@ -242,7 +259,7 @@ class Beachline(object):
         # Find the node to be deleted and remove it
         if not root:
             return root
-        elif(event.node==root): 
+        elif(event.node.point==root.point and root.leftx<=event.point.x<=root.rightx): 
             # print('a', root, root.lneighbor, root.rneighbor, root.left, root.right)
             if root.lneighbor: 
                 root.lneighbor.rneighbor = root.rneighbor
@@ -282,6 +299,7 @@ class Beachline(object):
             # print(root, event.point, 'l')
             root.right = self.delete_node(root.right, event)
         else:
+            # print('hi')
             return root
             if root.lneighbor: 
                 root.lneighbor.rneighbor = root.rneighbor
@@ -395,9 +413,9 @@ def f(points):
             beachlineroot = beachline.insert_node(beachlineroot, nextevent.point)
             # print('a')
             # print(beachlineroot)
-            leftmost = beachlineroot
-            while(leftmost.left is not None): 
-                leftmost = leftmost.left
+            # leftmost = beachlineroot
+            # while(leftmost.left is not None): 
+            #     leftmost = leftmost.left
             # print(leftmost)
             # while(leftmost): 
                 # print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
@@ -431,11 +449,13 @@ def f(points):
             # print(nextevent)
             # print(nextevent.node)
             nextevent.node.directrix = nextevent.directrix
-            node = beachline.find_node(beachlineroot, nextevent.node)
+            node = beachline.find_node(beachlineroot, nextevent.node,eventx=nextevent.point.x)
+            # print(nextevent.node, node)
             if(True): 
                 point1 = nextevent.node.point.x, nextevent.node.point.y
                 point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
                 point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
+                # print(point1, point2, point3, nextevent.point)
                 edge12 = (point1, point2) if point1[0]<point2[0] or (point1[0]==point2[0] and point1[1]<point2[1]) else (point2, point1)
                 edge23 = (point2, point3) if point2[0]<point3[0] or (point2[0]==point3[0] and point2[1]<point3[1]) else (point3, point2)
                 edge31 = (point3, point1) if point3[0]<point1[0] or (point3[0]==point1[0] and point3[1]<point1[1]) else (point1, point3)
@@ -486,7 +506,9 @@ def f(points):
         # while(leftmost): 
         #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
         #     leftmost = leftmost.rneighbor
+        # print()
     return graph
 # ans = (f([Point(0, 0), Point(2, 3), Point(-6, 5), Point(-1, -10), Point(1, 8)]))
-print(set(f([Point(334, 203), Point(227, 337), Point(678, 283), Point(355, 421), Point(847, 322)])))
+# print(set(f([Point(334, 203), Point(227, 337), Point(678, 283), Point(355, 421), Point(847, 322)])))
 # (334, 203) (227, 337) (678, 283) (355, 421) (847, 322)
+print(set(f([Point(383, 79), Point(152, 283), Point(463, 232), Point(311, 432)])))
