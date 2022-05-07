@@ -1,6 +1,13 @@
-from avl import AVLTree
 from math import inf, sqrt, atan, atan2
 from heapq import heappush, heappop
+import pygame
+
+pygame.init()
+HEIGHT = 600
+WIDTH = 1000
+screen = pygame.display.set_mode([WIDTH, HEIGHT])
+screen.fill((255, 255, 255))
+
 class Point(object): 
     def __init__(self, x, y): 
         self.x = x
@@ -474,4 +481,31 @@ def f(points):
         #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
         #     leftmost = leftmost.rneighbor
     return graph
-print(f([Point(501, 137), Point(355, 297), Point(419, 360), Point(573, 301), Point(735, 204) ]))
+
+positions = []
+def game(screen, running, calc_flag):
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN and not calc_flag:
+                pos = pygame.mouse.get_pos()
+                pygame.draw.circle(screen, (0, 0, 0), pos, 2)
+                positions.append(Point(pos[0],pos[1]))
+                pygame.display.flip()
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE] and not calc_flag:
+            calc_flag = True
+            s = ""
+            for point in positions:
+                s += "("+str(point.x)+", "+str(point.y)+") "
+            print(s)
+            ans = f(positions)
+            for pos1, pos2 in ans:
+                pygame.draw.line(screen, (0,0,0), pos1, pos2)
+            print(ans)
+            pass
+        pygame.display.flip()
+    pygame.quit()
+
+game(screen, True, False)
