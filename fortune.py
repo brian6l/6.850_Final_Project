@@ -10,6 +10,18 @@ class Point(object):
     def __str__(self): 
         return str(self.x)+','+str(self.y)
 class TreeNode(object):
+    def copy(self): 
+        tempnode = self
+        tempnodecopy = TreeNode(tempnode.point)
+        tempnodecopy.left = tempnode.left
+        tempnodecopy.right = tempnode.right
+        tempnodecopy.leftx = tempnode.leftx
+        tempnodecopy.rightx = tempnodecopy.rightx
+        tempnodecopy.directrix = tempnode.directrix
+        tempnodecopy.lneighbor = tempnode.lneighbor
+        tempnodecopy.rneighbor = tempnode.rneighbor
+        tempnodecopy.height = tempnode.height
+        return tempnodecopy
     def __init__(self, point):
         self.point = point
         self.left = None
@@ -241,7 +253,7 @@ class Beachline(object):
                 if(root.lneighbor and root.lneighbor.right==root): 
                     # print('hi')
                     root.lneighbor.right = None
-                if(root.rneighbor and root.rneighbor.left==root): 
+                if(root.rneighbor and root.rneighbor.left and root.rneighbor.left==root): 
                     root.rneighbor.left = None
                 # temp2 = root.lneighbor
                 # root.point = Point(7, 8)
@@ -401,7 +413,7 @@ def f(points):
                     circumy = circumcenter(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                        heappush(events, Event(node.lneighbor, Point(circumx, circumy), arcy, False))
+                        heappush(events, Event(node.lneighbor.copy(), Point(circumx, circumy), arcy, False))
             if(node.rneighbor and node.rneighbor.rneighbor): 
                 # print('asdfghr')
                 # print(node)
@@ -412,7 +424,7 @@ def f(points):
                     circumy = circumcenter(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point).y
                     arcy = circumy+circumradius(node.point, node.rneighbor.point, node.rneighbor.rneighbor.point)
                     if(atan((node.point.x-circumx)/(arcy-node.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                        heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
+                        heappush(events, Event(node.rneighbor.copy(), Point(circumx, circumy), arcy, False))
             # heappush(events, events)
         else: 
             # event is popping smth
@@ -420,11 +432,7 @@ def f(points):
             # print(nextevent.node)
             nextevent.node.directrix = nextevent.directrix
             node = beachline.find_node(beachlineroot, nextevent.node)
-            if(node): 
-                # print('success', nextevent.directrix)
-                # print(nextevent)
-                # print(nextevent.node.lneighbor)
-                # print(nextevent.node.rneighbor)
+            if(True): 
                 point1 = nextevent.node.point.x, nextevent.node.point.y
                 point2 = nextevent.node.lneighbor.point.x, nextevent.node.lneighbor.point.y
                 point3 = nextevent.node.rneighbor.point.x, nextevent.node.rneighbor.point.y
@@ -443,13 +451,19 @@ def f(points):
                     graph[edge31].append((nextevent.point.x, nextevent.point.y))
                 else: 
                     graph[edge31] = [(nextevent.point.x, nextevent.point.y)]
+                # print(node, set(graph))
+            if(node): 
+                # print('success', nextevent.directrix)
+                # print(nextevent)
+                # print(nextevent.node.lneighbor)
+                # print(nextevent.node.rneighbor)
                 if(node.lneighbor and node.rneighbor and node.lneighbor.lneighbor): 
                     # if(area(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)>0): 
                         circumx = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).x
                         circumy = circumcenter(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point).y
                         arcy = circumy+circumradius(node.rneighbor.point, node.lneighbor.point, node.lneighbor.lneighbor.point)
                         if(atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))>atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))>atan((node.lneighbor.lneighbor.point.x-circumx)/(arcy-node.lneighbor.lneighbor.point.y))): 
-                            heappush(events, Event(node.lneighbor, Point(circumx, circumy), arcy, False))
+                            heappush(events, Event(node.lneighbor.copy(), Point(circumx, circumy), arcy, False))
                 if(node.lneighbor and node.rneighbor and node.rneighbor.rneighbor): 
                     # if(area(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point)<0): 
                         circumx = circumcenter(node.lneighbor.point, node.rneighbor.point, node.rneighbor.rneighbor.point).x
@@ -460,9 +474,8 @@ def f(points):
                         # print(node.rneighbor)
                         # print(node.rneighbor.rneighbor)
                         # print(arcy)
-                        # check this condition vvv
                         if(atan((node.lneighbor.point.x-circumx)/(arcy-node.lneighbor.point.y))<atan((node.rneighbor.point.x-circumx)/(arcy-node.rneighbor.point.y))<atan((node.rneighbor.rneighbor.point.x-circumx)/(arcy-node.rneighbor.rneighbor.point.y))): 
-                            heappush(events, Event(node.rneighbor, Point(circumx, circumy), arcy, False))
+                            heappush(events, Event(node.rneighbor.copy(), Point(circumx, circumy), arcy, False))
                 beachlineroot = beachline.delete_node(beachlineroot, nextevent)
         # print()
         # print([i.__str__() for i in events])
@@ -474,5 +487,6 @@ def f(points):
         #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
         #     leftmost = leftmost.rneighbor
     return graph
-# print(f([Point(0, 0), Point(2, 3), Point(-3, 5), Point(0, -4), Point(1, 8)]))
-print(f([Point(501, 137), Point(735, 204), Point(355, 297), Point(573, 301), Point(419, 360)]))
+# ans = (f([Point(0, 0), Point(2, 3), Point(-6, 5), Point(-1, -10), Point(1, 8)]))
+print(set(f([Point(334, 203), Point(227, 337), Point(678, 283), Point(355, 421), Point(847, 322)])))
+# (334, 203) (227, 337) (678, 283) (355, 421) (847, 322)
