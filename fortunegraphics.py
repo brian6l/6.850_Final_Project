@@ -396,6 +396,7 @@ class Beachline(object):
         if root.directrix == -inf:
             return
         curr = self.getMinValueNode(root)
+        right = None
         while curr:
             curr.directrix, temp = root.directrix, curr.directrix
             try:
@@ -436,7 +437,8 @@ def circumradius(point1, point2, point3):
     return d1*d2*d3/(2*abs(area(point1, point2, point3)))
 def area(point1, point2, point3): 
     return point1.x*point2.y+point2.x*point3.y+point3.x*point1.y-point1.y*point2.x-point2.y*point3.x-point3.y*point1.x
-def f(points): 
+    
+def f(points, speed = 0.005): 
     points.sort(key=lambda point: point.y)
     beachlineroot = None
     beachline = Beachline()
@@ -459,10 +461,13 @@ def f(points):
                 for i in range(0,N):
                     beachlineroot.directrix = prev_directrix + (nextevent.directrix-prev_directrix)*i/N
                     draw_points()
+                    for edge in graph:
+                        if len(graph[edge]) == 2:
+                            pygame.draw.line(screen, (0,0,0), graph[edge][0], graph[edge][1])
                     pygame.draw.line(screen, (0,0,0), (0, beachlineroot.directrix), (WIDTH, beachlineroot.directrix))
                     beachline.draw(beachlineroot)
                     pygame.display.flip()
-                    time.sleep(0.01)
+                    time.sleep(speed)
                     if beachlineroot.directrix > HEIGHT:
                         break
                 beachlineroot.directrix = root_directrix
@@ -473,7 +478,7 @@ def f(points):
                 draw_points()
                 pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y))
                 pygame.display.flip()
-                time.sleep(0.01)
+                time.sleep(speed)
         if(nextevent.isinsertion): 
             # print()
             # event is new site
@@ -643,9 +648,26 @@ def game(screen, running, calc_flag):
             for point in positions:
                 s += "Point("+str(point.x)+", "+str(point.y)+"),"
             print(s[:-1])
-            ans = f(positions)
-            for pos1, pos2 in ans:
-                pygame.draw.line(screen, (0,0,0), pos1, pos2)
+            ans = f(positions, 0.01)
+            draw_points()
+            for edge in ans:
+                #pygame.draw.line(screen, (0,0,0), edge[0], edge[1])
+                if len(ans[edge])==2:
+                    pygame.draw.line(screen, (0,0,0), ans[edge][0], ans[edge][1])
+                else:
+                    if not(0<=ans[edge][0][0]<=WIDTH and 0<=ans[edge][0][1]<=HEIGHT):
+                        continue
+                    m = (edge[1][1]-edge[0][1])/(edge[1][0]-edge[0][0])
+                    b = edge[1][1] - m*edge[1][0]
+                    for point in positions:
+                        if (point.x, point.y) != edge[0] and (point.x, point.y) != edge[1]:
+                            break
+                    m1 = -1/m
+                    b1 = ans[edge][0][1]-m1*ans[edge][0][0]
+                    if b+m*point.x > point.y:
+                        pygame.draw.line(screen, (0,0,0), ans[edge][0], ((HEIGHT-b1)/m1,HEIGHT))
+                    else:
+                        pygame.draw.line(screen, (0,0,0), ans[edge][0], (-b1/m1, 0))
             print(ans)
             pass
         pygame.display.flip()
