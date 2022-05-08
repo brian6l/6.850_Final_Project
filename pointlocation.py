@@ -1,5 +1,4 @@
 import random
-from subprocess import ABOVE_NORMAL_PRIORITY_CLASS
 
 EPSILON = 0.0001
 
@@ -117,7 +116,7 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
                 bottom_traps.append(Trapezoid(curr_trap.val.bottom, segment, curr_leftp_bottom, curr_trap.val.rightp))
                 curr_leftp_bottom = curr_trap.val.rightp
             if len(curr_trap.rightneighbors) > 1:
-                leftp_test = curr_trap.rightneighbors[0].leftp
+                leftp_test = curr_trap.rightneighbors[0].val.leftp
                 if leftp_test.y < m*leftp_test.x+b: #the left point is below, so we use the upper neighbor
                     curr_trap = curr_trap.rightneighbors[1]
                 else:
@@ -206,9 +205,9 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
             
             for i in range(1,len(trap_list)-1):
                 trap_list[i].replace(Node("S", segment, trap_list[i].parent, bottom_traps[curr_bottom_index], top_traps[curr_top_index]))
-                if trap_list[i].val.rightp == top_traps[curr_top_index].rightp:
+                if trap_list[i].val.rightp == top_traps[curr_top_index].val.rightp:
                     curr_top_index += 1
-                elif trap_list[i].val.rightp == bottom_traps[curr_bottom_index].rightp:
+                elif trap_list[i].val.rightp == bottom_traps[curr_bottom_index].val.rightp:
                     curr_bottom_index += 1
                 else:
                     raise Exception("Right point is not a left point of either constituent trapezoid")
