@@ -20,11 +20,13 @@ class DSDS():
         self.parents[y] = x
         self.sizes[x] += self.sizes[y]
 
-def kruskal(graph):
+def kruskal(graph, screen):
     CC = DSDS(graph["V"])
     ans = set()
     graph["E"].sort()
-    for (u, v) in graph["E"]:
+    for e in graph["E"]:
+        u = e[1]
+        v = e[2]
         if CC.find(u) != CC.find(v):
             ans.add((u,v))
             CC.merge(u,v)
@@ -33,18 +35,18 @@ def kruskal(graph):
 def dist(point1, point2):
     return ((point1[0]-point2[0])**2+(point1[1]-point2[1])**2)**0.5
 
-def Delaunay(points):
-    graph = f(points)
+def Delaunay(points, screen):
+    graph = f(points, screen = screen)
     return {edge for edge in graph}
 
 
-def EMST(points):
-    edges = list(Delaunay(points))
+def EMST(points, screen):
+    edges = list(Delaunay(points, screen))
     vertices = set()
     for edge in edges:
         vertices.add(edge[0])
         vertices.add(edge[1])
     for i in range(len(edges)):
         edges[i] = (dist(edges[i][0],edges[i][1]), edges[i][0], edges[i][1])
-    return kruskal({"E":edges, "V":vertices})
+    return kruskal({"E":edges, "V":vertices}, screen)
     

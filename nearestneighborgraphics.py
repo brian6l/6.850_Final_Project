@@ -85,7 +85,7 @@ def NearestNeighbor(sites, box = [(0,0),(1000,600)], speed = 0.01):
                 continue
             raise Exception("Could not find a suitable border point")
     print([edge for edge in edges])
-    trap_tree = DecisionTree([edge for edge in edges], screen = screen)
+    trap_tree = DecisionTree([edge for edge in edges], box, screen)
     return trap_tree, graph
 
 def query_NN(trap_tree, pos):
@@ -102,6 +102,8 @@ def query_NN(trap_tree, pos):
                 region = region.leftneighbors[0]
 
 positions = []
+x_coords = set()
+y_coords = set()
 def game(screen, running, calc_flag):
     trap_tree = None
     last_query = None
@@ -112,11 +114,13 @@ def game(screen, running, calc_flag):
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and not calc_flag:
                 pos = pygame.mouse.get_pos()
-                if not computation_flag:
+                if not computation_flag and pos[0] not in x_coords and pos[1] not in y_coords:
                     pygame.draw.circle(screen, (0, 0, 0), pos, 2)
                     pygame.display.flip()
                     positions.append((pos[0],pos[1]))
-                else:
+                    x_coords.add(pos[0])
+                    y_coords.add(pos[1])
+                elif trap_tree:
                     pygame.draw.circle(screen, (0, 0, 0), pos, 1)
                     if last_query:
                         pygame.draw.circle(screen, (255,255,255), last_query, 1)
@@ -134,26 +138,31 @@ def game(screen, running, calc_flag):
             for point in positions:
                 s += "("+str(point[0])+", "+str(point[1])+"),"
             print(s[:-1])
-            trap_tree, voronoi = NearestNeighbor(positions, speed = 0.01)
-            for point in positions:
-                pygame.draw.circle(screen, (0,0,0), (point[0], point[1]), 2)
-            for edge in voronoi:
-                if len(voronoi[edge])==2:
-                    pygame.draw.line(screen, (255,0,0), voronoi[edge][0], voronoi[edge][1],2)
-                else:
-                    if not(0<=voronoi[edge][0][0]<=WIDTH and 0<=voronoi[edge][0][1]<=HEIGHT):
-                        continue
-                    m = (edge[1][1]-edge[0][1])/(edge[1][0]-edge[0][0])
-                    b = edge[1][1] - m*edge[1][0]
-                    for point in positions:
-                        if (point[0], point[1]) != edge[0] and (point[0], point[1]) != edge[1]:
-                            break
-                    m1 = -1/m
-                    b1 = voronoi[edge][0][1]-m1*voronoi[edge][0][0]
-                    if b+m*point[0] > point[1]:
-                        pygame.draw.line(screen, (255,0,0), voronoi[edge][0], ((HEIGHT-b1)/m1,HEIGHT),2)
+            try:
+                trap_tree, voronoi = NearestNeighbor(positions, speed = 0.01)
+                pygame.draw.rect(screen, (255, 255, 255), pygame.Rect((0,0),(1000,600)))
+                trap_tree.draw((200,200,200))
+                for point in positions:
+                    pygame.draw.circle(screen, (0,0,0), (point[0], point[1]), 2)
+                for edge in voronoi:
+                    if len(voronoi[edge])==2:
+                        pygame.draw.line(screen, (255,0,0), voronoi[edge][0], voronoi[edge][1],2)
                     else:
-                        pygame.draw.line(screen, (255,0,0), voronoi[edge][0], (-b1/m1, 0),2)
+                        if not(0<=voronoi[edge][0][0]<=WIDTH and 0<=voronoi[edge][0][1]<=HEIGHT):
+                            continue
+                        m = (edge[1][1]-edge[0][1])/(edge[1][0]-edge[0][0])
+                        b = edge[1][1] - m*edge[1][0]
+                        for point in positions:
+                            if (point[0], point[1]) != edge[0] and (point[0], point[1]) != edge[1]:
+                                break
+                        m1 = -1/m
+                        b1 = voronoi[edge][0][1]-m1*voronoi[edge][0][0]
+                        if b+m*point[0] > point[1]:
+                            pygame.draw.line(screen, (255,0,0), voronoi[edge][0], ((HEIGHT-b1)/m1,HEIGHT),2)
+                        else:
+                            pygame.draw.line(screen, (255,0,0), voronoi[edge][0], (-b1/m1, 0),2)
+            except:
+                print(s)
             calc_flag = False
             computation_flag = True
             pass

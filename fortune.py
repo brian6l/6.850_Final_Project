@@ -380,7 +380,6 @@ class Beachline(object):
             else:
                 root.right = self.rightRotate(root.right)
                 return self.leftRotate(root)
-        print('c')
         if(boolean): 
             print(root, root.lneighbor, root.right.left.lneighbor.lneighbor, root.right.left.lneighbor.lneighbor.lneighbor)
         return root

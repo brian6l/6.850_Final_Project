@@ -41,7 +41,7 @@ class TreeNode(object):
         self.rightx = inf
         self.directrix = -inf
     def __str__(self): 
-        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'+str(self.height)
+        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'+str(self.height)+'|'+str(id(self))
     def __eq__(self, node): 
         return self.point==node.point and self.leftx==node.leftx and self.rightx==node.rightx
     def computerightx(self): 
@@ -127,7 +127,7 @@ class Event(object):
     def __eq__(self, event): 
         return self.directrix==event.directrix
     def __str__(self): 
-        return str(self.node)+'||'+str(self.point)+'||'+str(self.directrix)+'||'+str(self.isinsertion)
+        return str(self.node)+'||'+str(self.point)+'||'+str(self.directrix)+'||'+str(self.isinsertion)+('' if self.isinsertion else '||'+str(self.nodepoint)+" "+str(self.lneighborpoint)+" "+str(self.rneighborpoint))
 class Beachline(object): 
     def __init__(self): 
         self.y = -inf
@@ -266,9 +266,11 @@ class Beachline(object):
     
     # Function to delete a node
     def delete_node(self, root, event):
-        # print(root, event, 'delete', root.computeleftx(), root.computerightx())
+        # print(root, event, 'delete', [root])
+        # print(root.computeleftx(), root.computerightx())
         root.directrix = event.directrix
         # Find the node to be deleted and remove it
+        boolean = False
         if not root:
             return root
         elif(event.node.point==root.point and root.leftx-0.0000001<=event.point.x<=root.rightx+0.0000001): 
@@ -308,7 +310,8 @@ class Beachline(object):
             elif root.right is None:
                 temp = root.left
             else:
-                temp = self.getMinValueNode(root.right)
+                temp = root.rneighbor
+                # temp = self.getMinValueNode(root.right)
             if not root.left or not root.right:
                 if root.rneighbor:
                     if root.lneighbor:
@@ -319,12 +322,21 @@ class Beachline(object):
                 elif root.leftneighbor:
                     root.leftneighbor.rightneighbor = None
                 return temp
+            boolean = False
+            # if(root.point==Point(307, 206)): 
+            #     boolean = True
+            #     print(root.lneighbor)
             root.point = temp.point
             root.leftx = temp.leftx
             root.rightx = temp.rightx
             if root.rneighbor:
+                if(root.rneighbor.rneighbor): 
+                    root.rneighbor.rneighbor.lneighbor = root
                 root.rneighbor = root.rneighbor.rneighbor
             root.right = self.delete_left_node(root.right)
+            # if(boolean): 
+            #     print(root, root.right.left, root.right.left.lneighbor, root.right.left.lneighbor.lneighbor, 'b')
+            # assert str([root])==str([root.rneighbor.lneighbor])
         elif root>event.point:
             # print('g')
             # print(root, event.point, 'g')
@@ -334,6 +346,7 @@ class Beachline(object):
             # print(root, event.point, 'l')
             root.right = self.delete_node(root.right, event)
         else:
+            print('not found')
             # print('hi')
             return root
             if root.lneighbor: 
@@ -375,6 +388,8 @@ class Beachline(object):
             else:
                 root.right = self.rightRotate(root.right)
                 return self.leftRotate(root)
+        if(boolean): 
+            print(root, root.lneighbor, root.right.left.lneighbor.lneighbor, root.right.left.lneighbor.lneighbor.lneighbor)
         return root
     def leftRotate(self, z):
         # print(z)
@@ -389,7 +404,7 @@ class Beachline(object):
         #     if(leftmost==rightmost): 
         #         break
         # print()
-        return z
+        # return z
         y = z.right
         T2 = y.left
         y.left = z
@@ -427,7 +442,7 @@ class Beachline(object):
         #     if(leftmost==rightmost): 
         #         break
         # print()
-        return z
+        # return z
         y = z.left
         T3 = y.right
         y.right = z
@@ -727,6 +742,8 @@ def f(points, speed = 0.005, screen = None):
     return graph
 
 positions = []
+x_coords = set()
+y_coords = set()
 def game(screen, running, calc_flag):
     while running:
         for event in pygame.event.get():
@@ -734,9 +751,12 @@ def game(screen, running, calc_flag):
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and not calc_flag:
                 pos = pygame.mouse.get_pos()
-                pygame.draw.circle(screen, (0, 0, 0), pos, 2)
-                positions.append(Point(pos[0],pos[1]))
-                pygame.display.flip()
+                if pos[0] not in x_coords and pos[1] not in y_coords:
+                    pygame.draw.circle(screen, (0, 0, 0), pos, 2)
+                    positions.append(Point(pos[0],pos[1]))
+                    x_coords.add(pos[0])
+                    y_coords.add(pos[1])
+                    pygame.display.flip()
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE] and not calc_flag:
             calc_flag = True

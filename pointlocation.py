@@ -82,23 +82,14 @@ class Node():
             else:
                 raise Exception("Node is not child of its parent")
 
-    def draw(self):
-        if self.type == "T":
-            self.val.draw()
-        else:
-            self.left.draw()
-            self.right.draw()
-
 def trap_sort(node):
     trap = node.val
     m = (trap.bottom.Q.y-trap.bottom.P.y)/(trap.bottom.Q.x-trap.bottom.P.x)
     b = trap.bottom.Q.y-m*trap.bottom.Q.x
     return m*trap.leftp.x+b
 
-def DecisionTree(edges, box = [(0,0), (1000,600)]):
-    '''For simplicity, we assume that edges do not have common endpoints. We can make this assumption for general point location by
-    replacing each edge with a slightly shortened one'''
-    random.shuffle(edges)
+def DecisionTree(edges, box = [(0,0), (1000,600)], speed = 0.05):
+    #random.shuffle(edges)
     print("EDGES: ",edges)
     bottom_left, bottom_right, top_left, top_right = Point(box[0][0], box[0][1]), Point(box[1][0], box[0][1]), Point(box[0][0], box[1][1]), Point(box[1][0], box[1][1])
     root = Node("T", Trapezoid(Segment(bottom_left,bottom_right),Segment(top_left,top_right),bottom_left,top_right))

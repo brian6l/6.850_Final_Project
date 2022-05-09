@@ -68,6 +68,8 @@ def EMST(points, screen):
     return kruskal({"E":edges, "V":vertices}, screen)
 
 positions = []
+x_coords = set()
+y_coords = set()
 def game(screen, running, calc_flag):
     while running:
         for event in pygame.event.get():
@@ -75,13 +77,16 @@ def game(screen, running, calc_flag):
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and not calc_flag:
                 pos = pygame.mouse.get_pos()
-                pygame.draw.circle(screen, (0, 0, 0), pos, 2)
-                positions.append(Point(pos[0],pos[1]))
-                pygame.display.flip()
+                if pos[0] not in x_coords and pos[1] not in y_coords:
+                    pygame.draw.circle(screen, (0, 0, 0), pos, 2)
+                    positions.append(Point(pos[0],pos[1]))
+                    x_coords.add(pos[0])
+                    y_coords.add(pos[1])
+                    pygame.display.flip()
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE] and not calc_flag:
             calc_flag = True
-            emst = EMST(positions, screen)
+            EMST(positions, screen)
         pygame.display.flip()
     pygame.quit()
 
