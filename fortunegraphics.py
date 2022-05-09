@@ -41,7 +41,7 @@ class TreeNode(object):
         self.rightx = inf
         self.directrix = -inf
     def __str__(self): 
-        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'#+str(self.directrix)
+        return str(self.point)+'|'+str(self.leftx)+','+str(self.rightx)+'|'+str(self.height)
     def __eq__(self, node): 
         return self.point==node.point and self.leftx==node.leftx and self.rightx==node.rightx
     def computerightx(self): 
@@ -79,7 +79,7 @@ class TreeNode(object):
             focusl = self.lneighbor.point
             parabolalcoeffs = [1/(2*(focusl.y-self.directrix)), -1/((focusl.y-self.directrix))*focusl.x, 1/(2*(focusl.y-self.directrix))*focusl.x**2+(focusl.y+self.directrix)/2]
             a, b, c = tuple(parabola1coeffs[i]-parabolalcoeffs[i] for i in range(3))
-            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs)
+            # print(a, b, c, self, self.lneighbor, self.rneighbor, self.directrix, parabola1coeffs, parabolalcoeffs)
             if(a==0): 
                 # print(a, b, c)
                 leftx = -c/b
@@ -104,7 +104,7 @@ class TreeNode(object):
             return False
         leftx = self.computeleftx()
         rightx = self.computerightx()
-        return rightx<point.x or (rightx<=point.x+0.00001 and leftx<point.x)
+        return rightx<point.x or (rightx<=point.x+0.0000001 and leftx<point.x)
     def __gt__(self, point): 
         if(self.leftx>point.x): 
             return True
@@ -113,7 +113,7 @@ class TreeNode(object):
         leftx = self.computeleftx()
         rightx = self.computerightx()
         # print(leftx, rightx, point.x)
-        return leftx>point.x or (leftx>=point.x-0.00001 and rightx>point.x)
+        return leftx>point.x or (leftx>=point.x-0.0000001 and rightx>point.x)
 class Event(object): 
     def __init__(self, node, point, directrix, isinsertion): 
         self.node = node
@@ -163,9 +163,9 @@ class Beachline(object):
             return root.rneighbor
         # if root>node.point:
         # print(root.computeleftx(), root.computerightx())
-        if(root.computeleftx()>eventx): 
+        if(root.computeleftx()>eventx or (root.computeleftx()>=eventx-0.0000001 and root.computerightx()>eventx)): 
             return self.find_node(root.left, node, eventx=eventx)
-        elif(root.computerightx()<eventx): 
+        elif(root.computerightx()<eventx or (root.computerightx()<=eventx+0.0000001 and root.computeleftx()<eventx)): 
             # print('hi', root.right)
         # elif root<node.point:
             return self.find_node(root.right, node, eventx=eventx)
@@ -266,41 +266,64 @@ class Beachline(object):
     
     # Function to delete a node
     def delete_node(self, root, event):
-        # print(root, event, 'delete')
+        # print(root, event, 'delete', root.computeleftx(), root.computerightx())
         root.directrix = event.directrix
         # Find the node to be deleted and remove it
         if not root:
             return root
-        elif(event.node.point==root.point and root.leftx<=event.point.x<=root.rightx): 
+        elif(event.node.point==root.point and root.leftx-0.0000001<=event.point.x<=root.rightx+0.0000001): 
+            # print('hi')
             # print('a', root, root.lneighbor, root.rneighbor, root.left, root.right)
-            if root.lneighbor: 
-                root.lneighbor.rneighbor = root.rneighbor
-            if root.rneighbor: 
-                root.rneighbor.lneighbor = root.lneighbor
+            # if root.left is None:
+            #     if root.lneighbor: 
+            #         root.lneighbor.rneighbor = root.rneighbor
+            #     if root.rneighbor: 
+            #         root.rneighbor.lneighbor = root.lneighbor
+            #     temp = root.right
+            #     root = None
+            #     print('left')
+            #     return temp
+            # elif root.right is None:
+            #     temp = root.left
+            #     if root.lneighbor: 
+            #         root.lneighbor.rneighbor = root.rneighbor
+            #     if root.rneighbor: 
+            #         root.rneighbor.lneighbor = temp
+            #     root = None
+            #     print('right')
+            #     return temp
+            # # print(root, 'neither')
+            # temp = self.getMinValueNode(root.right)
+            # root.point = temp.point
+            # root.leftx = temp.leftx
+            # root.rightx = temp.rightx
+            # root.right = self.delete_left_node(root.right)
+            # if(root.rneighbor and root.rneighbor.rneighbor): 
+            #     root.rneighbor.rneighbor.lneigbor = root
+            #     root.rneighbor = root.rneighbor.rneighbor
+            # print(root, root.left, root.right)
+            # print(root.lneighbor.rneighbor, root.rneighbor.lneighbor)
             if root.left is None:
                 temp = root.right
-                if(root.lneighbor and root.rneighbor.left and root.lneighbor.right==root): 
-                    # print('hi')
-                    root.lneighbor.right = None
-                if(root.rneighbor and root.rneighbor.left and root.rneighbor.left==root): 
-                    root.rneighbor.left = None
-                # temp2 = root.lneighbor
-                # root.point = Point(7, 8)
-                # print(root.rneighbor, root)
-                root = None
-                return temp
             elif root.right is None:
                 temp = root.left
-                if(root.lneighbor and root.lneighbor.right and root.lneighbor.right==root): 
-                    root.lneighbor.right = None
-                if(root.rneighbor and root.rneighbor.left and root.rneighbor.left==root): 
-                    root.rneighbor.left = None
-                root = None
+            else:
+                temp = self.getMinValueNode(root.right)
+            if not root.left or not root.right:
+                if root.rneighbor:
+                    if root.lneighbor:
+                        root.rneighbor.lneighbor = root.lneighbor
+                        root.lneighbor.rneighbor = root.rneighbor
+                    else:
+                        root.rightneighbor.leftneighbor = None
+                elif root.leftneighbor:
+                    root.leftneighbor.rightneighbor = None
                 return temp
-            temp = self.getMinValueNode(root.right)
             root.point = temp.point
             root.leftx = temp.leftx
             root.rightx = temp.rightx
+            if root.rneighbor:
+                root.rneighbor = root.rneighbor.rneighbor
             root.right = self.delete_left_node(root.right)
         elif root>event.point:
             # print('g')
@@ -354,6 +377,19 @@ class Beachline(object):
                 return self.leftRotate(root)
         return root
     def leftRotate(self, z):
+        # print(z)
+        # leftmost = self.getMinValueNode(z)
+        # rightmost = z
+        # while(rightmost is not None and rightmost.right is not None): 
+        #     rightmost = rightmost.right
+        # print(leftmost)
+        # while(True): 
+        #     leftmost = leftmost.rneighbor
+        #     print(leftmost)
+        #     if(leftmost==rightmost): 
+        #         break
+        # print()
+        return z
         y = z.right
         T2 = y.left
         y.left = z
@@ -362,10 +398,36 @@ class Beachline(object):
                            self.getHeight(z.right))
         y.height = 1 + max(self.getHeight(y.left),
                            self.getHeight(y.right))
+        # leftmost = self.getMinValueNode(y)
+        # rightmost = y
+        # while(rightmost is not None and rightmost.right is not None): 
+        #     rightmost = rightmost.right
+        # print(leftmost)
+        # while(True): 
+        #     leftmost = leftmost.rneighbor
+        #     print(leftmost)
+        #     if(leftmost==rightmost): 
+        #         break
+        # print()
+        # print()
         return y
 
     # Function to perform right rotation
     def rightRotate(self, z):
+        # print(z, 'right', z.left, z.right)
+        # print(self.getBalance(z))
+        # leftmost = self.getMinValueNode(z)
+        # rightmost = z
+        # while(rightmost is not None and rightmost.right is not None): 
+        #     rightmost = rightmost.right
+        # print(leftmost)
+        # while(True): 
+        #     leftmost = leftmost.rneighbor
+        #     print(leftmost)
+        #     if(leftmost==rightmost): 
+        #         break
+        # print()
+        return z
         y = z.left
         T3 = y.right
         y.right = z
@@ -374,6 +436,18 @@ class Beachline(object):
                            self.getHeight(z.right))
         y.height = 1 + max(self.getHeight(y.left),
                            self.getHeight(y.right))
+        # leftmost = self.getMinValueNode(y)
+        # rightmost = y
+        # while(rightmost is not None and rightmost.right is not None): 
+        #     rightmost = rightmost.right
+        # print(leftmost)
+        # while(True): 
+        #     leftmost = leftmost.rneighbor
+        #     print(leftmost)
+        #     if(leftmost==rightmost): 
+        #         break
+        # print()
+        # print()
         return y
 
     # Get the height of the node
@@ -392,7 +466,7 @@ class Beachline(object):
         if root is None or root.left is None:
             return root
         return self.getMinValueNode(root.left)
-    def draw(self, root, precision = 100):
+    def draw(self, root, precision = 100, screen = screen):
         if root.directrix == -inf:
             return
         curr = self.getMinValueNode(root)
@@ -420,7 +494,7 @@ class Beachline(object):
                     prev_p = curr_p
             curr = curr.rneighbor
 
-def draw_points():
+def draw_points(positions, screen = screen):
     pygame.draw.rect(screen, (255,255,255), pygame.Rect((0,0), (WIDTH, HEIGHT)))
     for point in positions:
         pygame.draw.circle(screen, (0,0,0), (point.x, point.y), 2)
@@ -438,7 +512,9 @@ def circumradius(point1, point2, point3):
 def area(point1, point2, point3): 
     return point1.x*point2.y+point2.x*point3.y+point3.x*point1.y-point1.y*point2.x-point2.y*point3.x-point3.y*point1.x
     
-def f(points, speed = 0.005): 
+def f(points, speed = 0.005, screen = None):
+    if not screen:
+        screen = pygame.display.set_mode([WIDTH, HEIGHT])
     points.sort(key=lambda point: point.y)
     beachlineroot = None
     beachline = Beachline()
@@ -460,12 +536,12 @@ def f(points, speed = 0.005):
                 N = floor(nextevent.directrix - prev_directrix)
                 for i in range(0,N):
                     beachlineroot.directrix = prev_directrix + (nextevent.directrix-prev_directrix)*i/N
-                    draw_points()
+                    draw_points(points, screen)
                     for edge in graph:
                         if len(graph[edge]) == 2:
                             pygame.draw.line(screen, (0,0,0), graph[edge][0], graph[edge][1])
                     pygame.draw.line(screen, (0,0,0), (0, beachlineroot.directrix), (WIDTH, beachlineroot.directrix))
-                    beachline.draw(beachlineroot)
+                    beachline.draw(beachlineroot, screen = screen)
                     pygame.display.flip()
                     time.sleep(speed)
                     if beachlineroot.directrix > HEIGHT:
@@ -475,7 +551,7 @@ def f(points, speed = 0.005):
             N = floor(nextevent.directrix - prev_directrix)
             for i in range(0, N):
                 y = prev_directrix + (nextevent.directrix - prev_directrix)*i/N
-                draw_points()
+                draw_points(points, screen)
                 pygame.draw.line(screen, (0,0,0), (0, y), (WIDTH, y))
                 pygame.display.flip()
                 time.sleep(speed)
@@ -628,6 +704,26 @@ def f(points, speed = 0.005):
         #     print(leftmost, leftmost.height, leftmost.left, leftmost.right, leftmost.lneighbor, leftmost.rneighbor)
         #     leftmost = leftmost.rneighbor
         # print()
+    draw_points(points)
+    for edge in graph:
+        #pygame.draw.line(screen, (0,0,0), edge[0], edge[1])
+        if len(graph[edge])==2:
+            pygame.draw.line(screen, (0,0,0), graph[edge][0], graph[edge][1])
+        else:
+            if not(0<=graph[edge][0][0]<=WIDTH and 0<=graph[edge][0][1]<=HEIGHT):
+                continue
+            m = (edge[1][1]-edge[0][1])/(edge[1][0]-edge[0][0])
+            b = edge[1][1] - m*edge[1][0]
+            for point in points:
+                if (point.x, point.y) != edge[0] and (point.x, point.y) != edge[1]:
+                    break
+            m1 = -1/m
+            b1 = graph[edge][0][1]-m1*graph[edge][0][0]
+            if b+m*point.x > point.y:
+                pygame.draw.line(screen, (0,0,0), graph[edge][0], ((HEIGHT-b1)/m1,HEIGHT))
+            else:
+                pygame.draw.line(screen, (0,0,0), graph[edge][0], (-b1/m1, 0))
+    pygame.display.flip()
     return graph
 
 positions = []
@@ -649,28 +745,10 @@ def game(screen, running, calc_flag):
                 s += "Point("+str(point.x)+", "+str(point.y)+"),"
             print(s[:-1])
             ans = f(positions, 0.01)
-            draw_points()
-            for edge in ans:
-                #pygame.draw.line(screen, (0,0,0), edge[0], edge[1])
-                if len(ans[edge])==2:
-                    pygame.draw.line(screen, (0,0,0), ans[edge][0], ans[edge][1])
-                else:
-                    if not(0<=ans[edge][0][0]<=WIDTH and 0<=ans[edge][0][1]<=HEIGHT):
-                        continue
-                    m = (edge[1][1]-edge[0][1])/(edge[1][0]-edge[0][0])
-                    b = edge[1][1] - m*edge[1][0]
-                    for point in positions:
-                        if (point.x, point.y) != edge[0] and (point.x, point.y) != edge[1]:
-                            break
-                    m1 = -1/m
-                    b1 = ans[edge][0][1]-m1*ans[edge][0][0]
-                    if b+m*point.x > point.y:
-                        pygame.draw.line(screen, (0,0,0), ans[edge][0], ((HEIGHT-b1)/m1,HEIGHT))
-                    else:
-                        pygame.draw.line(screen, (0,0,0), ans[edge][0], (-b1/m1, 0))
             print(ans)
             pass
         pygame.display.flip()
     pygame.quit()
 
-game(screen, True, False)
+if __name__ == '__main__':
+    game(screen, True, False)

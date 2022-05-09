@@ -112,7 +112,7 @@ def trap_sort(node):
     b = trap.bottom.Q.y-m*trap.bottom.Q.x
     return m*trap.leftp.x+b
 
-def DecisionTree(edges, box = [(0,0), (1000,600)]):
+def DecisionTree(edges, box = [(0,0), (1000,600)], screen = screen):
     #random.shuffle(edges)
     print("EDGES: ",edges)
     bottom_left, bottom_right, top_left, top_right = Point(box[0][0], box[0][1]), Point(box[1][0], box[0][1]), Point(box[0][0], box[1][1]), Point(box[1][0], box[1][1])
@@ -120,9 +120,15 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
     for n in range(len(edges)):
         e = edges[n]
         if e[1][0] < e[0][0]:
-            e = (e[1], e[0])
+            if len(e) > 2:
+                e = (e[1], e[0], e[2], e[3])
+            else:
+                e = (e[1], e[0])
         print("Adding edge",e)
-        segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]))
+        if len(e) > 2:
+            segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]), e[2], e[3])
+        else:
+            segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]))
         m = (e[1][1]-e[0][1])/(e[1][0]-e[0][0])
         b = e[1][1]-e[1][0]*m
         normal_c = EPSILON/((1+m**2)**0.5)
@@ -189,12 +195,12 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
             left_cap.leftneighbors = trap_start.leftneighbors
             new_trap = left_cap
         else:
-            if trap_start.top.P == trap_start.leftp:
-                new_trap = bottom_traps[0]
-            elif trap_start.bottom.P == trap_start.leftp:
-                new_trap = top_traps[0]
-            else:
-                raise Exception("left endpoint isn't an endpoint of top or bottom")
+            #if trap_start.val.top.P == trap_start.val.leftp:
+                #new_trap = bottom_traps[0]
+            #elif trap_start.val.bottom.P == trap_start.val.leftp:
+                #new_trap = top_traps[0]
+            #else:
+                raise Exception
         for neighbor_trap in trap_start.leftneighbors:
             for i in range(len(neighbor_trap.rightneighbors)):
                 if neighbor_trap.rightneighbors[i] == trap_start:
@@ -210,12 +216,12 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
             right_cap.rightneighbors = trap_end.rightneighbors
             new_trap = right_cap
         else:
-            if trap_end.top.Q == trap_end.rightp:
-                new_trap = bottom_traps[-1]
-            elif trap_end.bottom.Q == trap_end.rightp:
-                new_trap = top_traps[-1]
-            else:
-                raise Exception("left endpoint isn't an endpoint of top or bottom")
+            #if trap_end.val.top.Q == trap_end.val.rightp:
+                #new_trap = bottom_traps[-1]
+            #elif trap_end.val.bottom.Q == trap_end.val.rightp:
+                #new_trap = top_traps[-1]
+            #else:
+                raise Exception
         for neighbor_trap in trap_end.rightneighbors:
             for i in range(len(neighbor_trap.leftneighbors)):
                 if neighbor_trap.leftneighbors[i] == trap_end:
@@ -324,7 +330,7 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
             pygame.draw.line(screen, (0,0,0), edges[j][0], edges[j][1])
         root.draw()
         pygame.display.flip()
-        time.sleep(1)
+        time.sleep(0.2)
     return root
 
 edges = []
@@ -355,5 +361,6 @@ def game(screen, running, calc_flag):
         pygame.display.flip()
     pygame.quit()
 
-game(screen, True, False)
+if __name__ == "__main__":
+    game(screen, True, False)
 

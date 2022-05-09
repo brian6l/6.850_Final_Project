@@ -679,8 +679,8 @@ def f(points):
 # ans = f([Point(1, 1), Point(-1, -1), Point(10, -10), Point(-10, 10), Point(0, 2), Point(0, -2)])
 # ans = f([Point(218, 109), Point(643, 221), Point(289, 389), Point(618, 210)])
 # ans = f([Point(283, 203), Point(231, 459), Point(588, 106), Point(351, 309), Point(629, 303)])
-ans = f([Point(454, 181),Point(361, 295),Point(813, 203),Point(359, 188),Point(609, 120),Point(57, 239),Point(309, 121),Point(233, 350),Point(637, 217),Point(603, 245),Point(619, 299),Point(338, 515),Point(475, 271),Point(105, 513),Point(410, 261),Point(753, 297)])
+#ans = f([Point(454, 181),Point(361, 295),Point(813, 203),Point(359, 188),Point(609, 120),Point(57, 239),Point(309, 121),Point(233, 350),Point(637, 217),Point(603, 245),Point(619, 299),Point(338, 515),Point(475, 271),Point(105, 513),Point(410, 261),Point(753, 297)])
 # ans = f([Point(0, 0), Point(0, 1), Point(1, 3), Point(2, 9)])
 # ans = f([Point(229, 383), Point(585, 148), Point(608, 365), Point(313, 187)])
-for i in ans: 
-    print(i, ans[i])
+#for i in ans: 
+    #print(i, ans[i])

@@ -35,12 +35,19 @@ class Trapezoid():
 
 class Node():
     #for segments, we say that down is left and up is right
-    def __init__(self, type, val, parent = None, left = None, right = None):
+    def __init__(self, type, val, parents = None, left = None, right = None):
         self.type = type #T for trapezoid, P for point, S for segment
         self.val = val
         self.left = left
+        if left:
+            left.parents.append(self)
         self.right = right
-        self.parent = parent
+        if right:
+            right.parents.append(self)
+        if parents:
+            self.parents = parents
+        else:
+            self.parents = []
         if self.type == "T":
             self.leftneighbors = [] #store bottom up. can have at most 2
             self.rightneighbors = []
@@ -63,26 +70,50 @@ class Node():
                 return self.right.search(pos)
     
     def replace(self, new_node):
-        if not self.parent:
+        if not self.parents:
             raise Exception("Parent not found")
-        if self.parent.left == self:
-            self.parent.left = new_node
-            new_node.parent = self.parent
-        elif self.parent.right == self:
-            self.parent.right = new_node
-            new_node.parent = self.parent
+        for parent in self.parents:
+            if parent.left == self:
+                parent.left = new_node
+                new_node.parents.append(parent)
+            elif    parent.right == self:
+                parent.right = new_node
+                new_node.parents.append(parent)
+            else:
+                raise Exception("Node is not child of its parent")
+
+    def draw(self):
+        if self.type == "T":
+            self.val.draw()
         else:
-            raise Exception("Node is not child of its parent")
+            self.left.draw()
+            self.right.draw()
+
+def trap_sort(node):
+    trap = node.val
+    m = (trap.bottom.Q.y-trap.bottom.P.y)/(trap.bottom.Q.x-trap.bottom.P.x)
+    b = trap.bottom.Q.y-m*trap.bottom.Q.x
+    return m*trap.leftp.x+b
 
 def DecisionTree(edges, box = [(0,0), (1000,600)]):
+    '''For simplicity, we assume that edges do not have common endpoints. We can make this assumption for general point location by
+    replacing each edge with a slightly shortened one'''
     random.shuffle(edges)
+    print("EDGES: ",edges)
     bottom_left, bottom_right, top_left, top_right = Point(box[0][0], box[0][1]), Point(box[1][0], box[0][1]), Point(box[0][0], box[1][1]), Point(box[1][0], box[1][1])
     root = Node("T", Trapezoid(Segment(bottom_left,bottom_right),Segment(top_left,top_right),bottom_left,top_right))
-    for e in edges:
-        print("Adding edge",e)
+    for n in range(len(edges)):
+        e = edges[n]
         if e[1][0] < e[0][0]:
-            e = (e[1], e[0])
-        segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]))
+            if len(e) > 2:
+                e = (e[1], e[0], e[2], e[3])
+            else:
+                e = (e[1], e[0])
+        print("Adding edge",e)
+        if len(e) > 2:
+            segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]), e[2], e[3])
+        else:
+            segment = Segment(Point(e[0][0],e[0][1]),Point(e[1][0],e[1][1]))
         m = (e[1][1]-e[0][1])/(e[1][0]-e[0][0])
         b = e[1][1]-e[1][0]*m
         normal_c = EPSILON/((1+m**2)**0.5)
@@ -146,12 +177,41 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
             bottom_traps[0].leftneighbors.append(left_cap)
             left_cap.rightneighbors.append(bottom_traps[0])
             left_cap.rightneighbors.append(top_traps[0])
+            left_cap.leftneighbors = trap_start.leftneighbors
+            new_trap = left_cap
+        else:
+            #if trap_start.val.top.P == trap_start.val.leftp:
+                #new_trap = bottom_traps[0]
+            #elif trap_start.val.bottom.P == trap_start.val.leftp:
+                #new_trap = top_traps[0]
+            #else:
+                raise Exception
+        for neighbor_trap in trap_start.leftneighbors:
+            for i in range(len(neighbor_trap.rightneighbors)):
+                if neighbor_trap.rightneighbors[i] == trap_start:
+                    neighbor_trap.rightneighbors[i] = new_trap
+                    break
+
         if right_cap:
             right_cap = Node("T", right_cap)
             top_traps[-1].rightneighbors.append(right_cap)
             bottom_traps[-1].rightneighbors.append(right_cap)
             right_cap.leftneighbors.append(bottom_traps[-1])
             right_cap.leftneighbors.append(top_traps[-1])
+            right_cap.rightneighbors = trap_end.rightneighbors
+            new_trap = right_cap
+        else:
+            #if trap_end.val.top.Q == trap_end.val.rightp:
+                #new_trap = bottom_traps[-1]
+            #elif trap_end.val.bottom.Q == trap_end.val.rightp:
+                #new_trap = top_traps[-1]
+            #else:
+                raise Exception
+        for neighbor_trap in trap_end.rightneighbors:
+            for i in range(len(neighbor_trap.leftneighbors)):
+                if neighbor_trap.leftneighbors[i] == trap_end:
+                    neighbor_trap.leftneighbors[i] = new_trap
+                    break
         
         for i in range(len(top_traps)-1):
             top_traps[i].rightneighbors.append(top_traps[i+1])
@@ -164,56 +224,93 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
                 raise Exception("If the line is in a single trapezoid, it should only have bottom and top")
             left_end_node, right_end_node = Node("P",left_end), Node("P",right_end)
             segment_node = Node("S", segment)
-            segment_node.left, bottom_traps[0].parent = bottom_traps[0], segment_node
-            segment_node.right, top_traps[0].parent = top_traps[0], segment_node
+            segment_node.left, segment_node.right = bottom_traps[0], top_traps[0]
+            bottom_traps[0].parents.append(segment_node)
+            top_traps[0].parents.append(segment_node)
             if left_cap and right_cap:
-                left_end_node.left, left_cap.parent = left_cap, left_end_node
-                left_end_node.right, right_end_node.parent = right_end_node, left_end_node
-                right_end_node.left, segment_node.parent = segment_node, right_end_node
-                right_end_node.right, right_cap.parent = right_cap, right_end_node
-                if not trap_start.parent:
+                left_end_node.left, left_end_node.right = left_cap, right_end_node
+                left_cap.parents.append(left_end_node)
+                right_end_node.parents.append(left_end_node)
+                right_end_node.left, right_end_node.right = segment_node, right_cap
+                segment_node.parents.append(right_end_node)
+                right_cap.parents.append(right_end_node)
+                if not trap_start.parents:
                     root = left_end_node
                 else:
                     trap_start.replace(left_end_node)
             elif left_cap:
-                left_end_node.left, left_cap.parent = left_cap, left_end_node
-                left_end_node.right, segment_node.parent = segment_node, left_end_node
+                left_end_node.left, left_end_node.right = left_cap, segment_node
+                left_cap.parents.append(left_end_node)
+                segment_node.parents.append(left_end_node)
                 trap_start.replace(left_end_node)
+                #add the neighbors of the right trap which takes the side?
             elif right_cap:
-                right_end_node.left, segment_node.parent = segment_node, right_end_node
-                right_end_node.right, right_cap.parent = right_cap, right_end_node
+                right_end_node.left, right_end_node.right = segment_node, right_cap
+                segment_node.parents.append(right_end_node)
+                right_cap.parents.append(right_end_node)
                 trap_start.replace(right_end_node)
+                #add the neighbors of the left trap which takes the side?
         else:
             curr_bottom_index, curr_top_index = 0, 0
             if left_cap:
-                segment_node = Node("S", segment,left_end, bottom_traps[0], top_traps[0])
-                trap_start.replace(Node("P",left_end, trap_start.parent, left_cap, segment_node))
+                segment_node = Node("S", segment, [left_end], bottom_traps[0], top_traps[0])
+                trap_start.replace(Node("P",left_end, None, left_cap, segment_node))
             else:
-                trap_start.replace(Node("S", segment, trap_start.parent, bottom_traps[0], top_traps[0]))
-            if trap_start.val.rightp == top_traps[0].val.rightp:
-                curr_top_index += 1
-            elif trap_start.val.rightp == bottom_traps[0].val.rightp:
-                curr_bottom_index += 1
-            else:
-                raise Exception("Right point is not a left point of either constituent trapezoid")
+                trap_start.replace(Node("S", segment, None, bottom_traps[0], top_traps[0]))
             
             if right_cap:
-                segment_node = Node("S", segment, right_end, bottom_traps[-1], top_traps[-1])
-                trap_end.replace(Node("P",right_end, trap_end.parent, right_cap, segment_node))
+                segment_node = Node("S", segment, [right_end], bottom_traps[-1], top_traps[-1])
+                trap_end.replace(Node("P",right_end, None, segment_node, right_cap))
             else:
-                trap_end.replace(Node("S", segment, trap_end.parent, bottom_traps[-1], top_traps[-1]))
+                trap_end.replace(Node("S", segment, None, bottom_traps[-1], top_traps[-1]))
             
-            for i in range(1,len(trap_list)-1):
-                trap_list[i].replace(Node("S", segment, trap_list[i].parent, bottom_traps[curr_bottom_index], top_traps[curr_top_index]))
+            for i in range(0,len(trap_list)-1):
+                if i > 0:
+                    trap_list[i].replace(Node("S", segment, None, bottom_traps[curr_bottom_index], top_traps[curr_top_index]))
+                left_new_neighbor = None
+                right_new_neighbor = None
+                for trap in trap_list[i+1].leftneighbors:
+                    if trap != trap_list[i]:
+                        left_new_neighbor = trap
+                for trap in trap_list[i].rightneighbors:
+                    if trap != trap_list[i+1]:
+                        right_new_neighbor = trap
                 if trap_list[i].val.rightp == top_traps[curr_top_index].val.rightp:
+                    if right_new_neighbor:
+                        for j in range(len(right_new_neighbor.leftneighbors)):
+                            if right_new_neighbor.leftneighbors[j] == trap_list[i]:
+                                right_new_neighbor.leftneighbors[j] = top_traps[curr_top_index]
+                                top_traps[curr_top_index].rightneighbors.append(right_new_neighbor)
+                                top_traps[curr_top_index].rightneighbors.sort(key = trap_sort)
+                                print(right_new_neighbor.val,"has new neighbor",top_traps[curr_top_index].val)
                     curr_top_index += 1
+                    if left_new_neighbor:
+                        for j in range(len(left_new_neighbor.rightneighbors)):
+                            if left_new_neighbor.rightneighbors[j] == trap_list[i+1]:
+                                left_new_neighbor.rightneighbors[j] = top_traps[curr_top_index]
+                                top_traps[curr_top_index].leftneighbors.append(left_new_neighbor)
+                                top_traps[curr_top_index].leftneighbors.sort(key = trap_sort)
+                                print(left_new_neighbor.val,"has new neighbor",top_traps[curr_top_index].val)
+
                 elif trap_list[i].val.rightp == bottom_traps[curr_bottom_index].val.rightp:
+                    if right_new_neighbor:
+                        for j in range(len(right_new_neighbor.leftneighbors)):
+                            if right_new_neighbor.leftneighbors[j] == trap_list[i]:
+                                right_new_neighbor.leftneighbors[j] = bottom_traps[curr_bottom_index]
+                                bottom_traps[curr_bottom_index].rightneighbors.append(right_new_neighbor)
+                                bottom_traps[curr_bottom_index].rightneighbors.sort(key = trap_sort)
+                                print(right_new_neighbor.val,"has new neighbor",bottom_traps[curr_bottom_index].val)
                     curr_bottom_index += 1
+                    if left_new_neighbor:
+                        for j in range(len(left_new_neighbor.rightneighbors)):
+                            if left_new_neighbor.rightneighbors[j] == trap_list[i+1]:
+                                left_new_neighbor.rightneighbors[j] = bottom_traps[curr_bottom_index]
+                                bottom_traps[curr_bottom_index].leftneighbors.append(left_new_neighbor)
+                                bottom_traps[curr_bottom_index].leftneighbors.sort(key = trap_sort)
+                                print(left_new_neighbor.val,"has new neighbor",bottom_traps[curr_bottom_index].val)
                 else:
                     raise Exception("Right point is not a left point of either constituent trapezoid")
     return root
-
-DecisionTree([((1,1),(2,3)), ((1,1),(4,5)), ((2,3),(4,5))],[(0,0),(10,10)])
             
             
 
