@@ -1,4 +1,12 @@
 import random
+import pygame
+import time
+
+pygame.init()
+HEIGHT = 600
+WIDTH = 1000
+screen = pygame.display.set_mode([WIDTH, HEIGHT])
+screen.fill((255, 255, 255))
 
 EPSILON = 0.0001
 
@@ -32,6 +40,15 @@ class Trapezoid():
 
     def __str__(self):
         return "bottom: " + str(self.bottom) + ", top: " + str(self.top) + ", left: " + str(self.leftp) + ", right: " + str(self.rightp)
+
+    def draw(self):
+        m1 = (self.top.Q.y-self.top.P.y)/(self.top.Q.x-self.top.P.x)
+        b1 = self.top.Q.y - m1*self.top.Q.x
+        m2 = (self.bottom.Q.y-self.bottom.P.y)/(self.bottom.Q.x-self.bottom.P.x)
+        b2 = self.bottom.Q.y - m2*self.bottom.Q.x
+        x1, x2 = self.leftp.x, self.rightp.x
+        pygame.draw.line(screen, (0,0,0), (x1,x1*m1+b1), (x1,x1*m2+b2))
+        pygame.draw.line(screen, (0,0,0), (x2,x2*m1+b1), (x2,x2*m2+b2))
 
 class Node():
     #for segments, we say that down is left and up is right
@@ -95,10 +112,8 @@ def trap_sort(node):
     b = trap.bottom.Q.y-m*trap.bottom.Q.x
     return m*trap.leftp.x+b
 
-def DecisionTree(edges, box = [(0,0), (1000,600)]):
-    '''For simplicity, we assume that edges do not have common endpoints. We can make this assumption for general point location by
-    replacing each edge with a slightly shortened one'''
-    random.shuffle(edges)
+def DecisionTree(edges, box = [(0,0), (1000,600)], screen = screen):
+    #random.shuffle(edges)
     print("EDGES: ",edges)
     bottom_left, bottom_right, top_left, top_right = Point(box[0][0], box[0][1]), Point(box[1][0], box[0][1]), Point(box[0][0], box[1][1]), Point(box[1][0], box[1][1])
     root = Node("T", Trapezoid(Segment(bottom_left,bottom_right),Segment(top_left,top_right),bottom_left,top_right))
@@ -310,9 +325,42 @@ def DecisionTree(edges, box = [(0,0), (1000,600)]):
                                 print(left_new_neighbor.val,"has new neighbor",bottom_traps[curr_bottom_index].val)
                 else:
                     raise Exception("Right point is not a left point of either constituent trapezoid")
+        pygame.draw.rect(screen, (255,255,255), pygame.Rect((0,0),(WIDTH,HEIGHT)))
+        for j in range(0,n+1):
+            pygame.draw.line(screen, (0,0,0), edges[j][0], edges[j][1])
+        root.draw()
+        pygame.display.flip()
+        time.sleep(0.2)
     return root
-            
-            
 
+edges = []
 
-        
+def game(screen, running, calc_flag):
+    prev_pos = None
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN and not calc_flag:
+                pos = pygame.mouse.get_pos()
+                if not prev_pos:
+                    prev_pos = pos
+                else:
+                    pygame.draw.line(screen, (0, 0, 0), pos, prev_pos)
+                    edges.append((prev_pos,pos))
+                    prev_pos = None
+                pygame.display.flip()
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE] and not calc_flag:
+            calc_flag = True
+            ans = DecisionTree(edges)
+            for edge in edges:
+                pygame.draw.line(screen, (0,0,0), edge[0], edge[1])
+            ans.draw()
+            pass
+        pygame.display.flip()
+    pygame.quit()
+
+if __name__ == "__main__":
+    game(screen, True, False)
+
