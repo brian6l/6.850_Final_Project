@@ -1,5 +1,5 @@
-from fortunegraphics import f, Point
-from pointlocationgraphics import DecisionTree, EPSILON
+from fortune import f, Point
+from pointlocation import DecisionTree, EPSILON
 
 def approx(points):
     p1, p2 = points[0], points[1]
@@ -76,7 +76,7 @@ def NearestNeighbor(sites, query, box = [(0,0),(1000,600)]):
                 continue
             raise Exception("Could not find a suitable border point")
     print([edge for edge in edges])
-    trap_tree = DecisionTree([edge for edge in edges])
+    trap_tree = DecisionTree([edge for edge in edges], box)
     region = trap_tree.search(query).val
     if region.top.bottom:
         return region.top.bottom
@@ -85,7 +85,7 @@ def NearestNeighbor(sites, query, box = [(0,0),(1000,600)]):
     else:
         print("oops!")
 
-print(NearestNeighbor([(0,0),(1,1),(2,4)],(3,3)))
+print(NearestNeighbor([(0,0),(1,1),(2,4)],(0.5,0.2)))
 
             
 

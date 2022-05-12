@@ -89,12 +89,12 @@ def NearestNeighbor(sites, box = [(0,0),(1000,600)], speed = 0.01):
     return trap_tree, graph
 
 def query_NN(trap_tree, pos):
-    region = trap_tree.search(pos).val
+    region = trap_tree.search(pos)
     for _ in range(2):
-        if region.top.bottom:
-            return region.top.bottom
-        elif region.bottom.top:
-            return region.bottom.top
+        if region.val.top.bottom:
+            return region.val.top.bottom
+        elif region.val.bottom.top:
+            return region.val.bottom.top
         else:
             if region.rightneighbors:
                 region = region.rightneighbors[0]

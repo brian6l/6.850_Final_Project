@@ -29,7 +29,6 @@ def SPM(points):
         while left:
             pygame.draw.line(screen, (0,0,0), (points[i-1][0], left.key[0]), (points[i][0], left.key[0]))
             left = left.rightneighbor
-        #START HERE
         below_proj = None
         start = None
         curr = root
@@ -64,7 +63,6 @@ def SPM(points):
             else:
                 break
         print("start:",start.key)
-        #THE PROBLEM IS HERE. THE INTERVAL DOESN'T NECESSARILY LIE IN A SINGLE BIG SUBTREE
         curr_up, curr_down = start, start
         last_up, last_down = None, None
         while curr_up:
@@ -83,7 +81,6 @@ def SPM(points):
                 curr_down = curr_down.left
             else:
                 curr_down = curr_down.right
-        #END HERE
         j = last_up.key[1]
         if points[j][1] >= points[i][1] and (points[i][0]-points[j][0]) <= (points[j][1]-points[i][1]):
             up = (points[j][1]+points[i][1]+points[i][0]-points[j][0])/2

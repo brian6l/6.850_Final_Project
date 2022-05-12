@@ -113,7 +113,7 @@ def trap_sort(node):
     return m*trap.leftp.x+b
 
 def DecisionTree(edges, box = [(0,0), (1000,600)], screen = screen, speed = 0.05):
-    #random.shuffle(edges)
+    random.shuffle(edges)
     print("EDGES: ",edges)
     bottom_left, bottom_right, top_left, top_right = Point(box[0][0], box[0][1]), Point(box[1][0], box[0][1]), Point(box[0][0], box[1][1]), Point(box[1][0], box[1][1])
     root = Node("T", Trapezoid(Segment(bottom_left,bottom_right),Segment(top_left,top_right),bottom_left,top_right))
